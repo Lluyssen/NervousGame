@@ -28,7 +28,7 @@ class RegenSystem : public SystemTypeList<TypeList<Heal, Mana>>
         void update(double, Registry<Signature>& reg) override
         {
             reg.template forEachEntityWith<Signature>([](Entity, Heal& h, Mana& m) {
-                h.hp +=1;
+                h.hp += 1;
                 m.mp += 2;
             });
         }

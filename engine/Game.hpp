@@ -5,6 +5,8 @@
 #include "../ecs/ECS.hpp"
 #include "../game/Components.hpp"
 #include "../game/Systems.hpp"
+#include "StateManager.hpp"
+#include "../game/states/MenuState.hpp"
 
 class Game
 {
@@ -17,48 +19,32 @@ public:
             return false;
         }
 
-        window = SDL_CreateWindow("SDL ECS Visualization",
-                                  SDL_WINDOWPOS_CENTERED,
-                                  SDL_WINDOWPOS_CENTERED,
-                                  width, height, 0);
+        window = SDL_CreateWindow(
+            "Tower Defence",
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
+            width,
+            height,
+            SDL_WINDOW_SHOWN);
+
         if (!window)
         {
             std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << std::endl;
             return false;
         }
 
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
         if (!renderer)
         {
             std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << std::endl;
             return false;
         }
 
+        context.window = window;
+        context.renderer = renderer;
+        stateManager.changeState<MenuState>();
         running = true;
         previousTime = SDL_GetTicks();
-
-        // === Scenes ECS ===
-        scenePosVel = &manager.createScene<TypeList<Position, Velocity>>("PosVelScene", true);
-        sceneHealMana = &manager.createScene<TypeList<Heal, Mana>>("HealManaScene", true);
-
-        // Position/Velocity entity
-        Entity e1 = scenePosVel->getRegistry().create();
-        scenePosVel->getRegistry().add<Position>(e1, {100,100});
-        scenePosVel->getRegistry().add<Velocity>(e1, {50,30});
-        scenePosVel->addSystem(new MovementSystem);
-
-        // Heal/Mana entities
-        Entity e2 = sceneHealMana->getRegistry().create();
-        sceneHealMana->getRegistry().add<Heal>(e2, {20});
-        sceneHealMana->getRegistry().add<Mana>(e2, {15});
-
-        Entity e22 = sceneHealMana->getRegistry().create();
-        sceneHealMana->getRegistry().add<Heal>(e22, {10});
-        sceneHealMana->getRegistry().add<Mana>(e22, {25});
-
-        sceneHealMana->addSystem(new RegenSystem, 10);
-        sceneHealMana->addSystem(new PrintSystem, 50);
-
         return true;
     }
 
@@ -94,73 +80,49 @@ public:
     }
 
 private:
-    SDL_Window* window = nullptr;
-    SDL_Renderer* renderer = nullptr;
+    SDL_Window *window = nullptr;
+    SDL_Renderer *renderer = nullptr;
     bool running = false;
     Uint32 previousTime = 0;
 
-    GameManager manager;
-    Scene<TypeList<Position, Velocity>>* scenePosVel;
-    Scene<TypeList<Heal, Mana>>* sceneHealMana;
+    GameContext context;
+    StateManager stateManager{context};
 
     void handleEvents()
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        SDL_Event e;
+        while (SDL_PollEvent(&e))
         {
-            if (event.type == SDL_QUIT)
+            if (e.type == SDL_QUIT)
                 running = false;
+            if (e.type == SDL_KEYDOWN) // touche pressée
+            {
+                switch (e.key.keysym.sym)
+                {
+                case SDLK_UP:
+                    std::cout << "Flèche Haut pressée\n";
+                    stateManager.changeState<MenuState>();
+                    break;
+                case SDLK_DOWN:
+                    std::cout << "Flèche Bas pressée\n";
+                    stateManager.changeState<GameState>();
+                    break;
+                }
+            }
+            stateManager.handleEvent(e);
         }
     }
 
     void update(float dt)
     {
-        scenePosVel->update(dt);
-        sceneHealMana->update(dt);
+        stateManager.update(dt);
     }
 
     void render()
     {
-        SDL_SetRenderDrawColor(renderer, 30,30,30,255);
+        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
         SDL_RenderClear(renderer);
-
-        // --- Draw Position/Velocity entities ---
-        auto& regPV = scenePosVel->getRegistry();
-        for (Entity e : regPV.getAliveEntities())
-        {
-            if (auto* pos = regPV.getIf<Position>(e))
-            {
-                SDL_Rect rect = { int(pos->x), int(pos->y), 20, 20 };
-                SDL_SetRenderDrawColor(renderer, 100,200,150,255);
-                SDL_RenderFillRect(renderer, &rect);
-            }
-        }
-
-        // --- Draw Heal/Mana entities as bars ---
-        auto& regHM = sceneHealMana->getRegistry();
-        int yOffset = 400;
-        int barWidth = 100, barHeight = 10, spacing = 5;
-        for (Entity e : regHM.getAliveEntities())
-        {
-            if (auto* heal = regHM.getIf<Heal>(e))
-            {
-                auto* mana = regHM.getIf<Mana>(e);
-                int hpWidth = std::min(heal->hp*5, barWidth);
-                int mpWidth = std::min(mana->mp*5, barWidth);
-
-                SDL_Rect hpBar = {50, yOffset, hpWidth, barHeight};
-                SDL_Rect mpBar = {50, yOffset+barHeight+spacing, mpWidth, barHeight};
-
-                SDL_SetRenderDrawColor(renderer, 200,50,50,255); // red HP
-                SDL_RenderFillRect(renderer, &hpBar);
-
-                SDL_SetRenderDrawColor(renderer, 50,50,200,255); // blue MP
-                SDL_RenderFillRect(renderer, &mpBar);
-
-                yOffset += 2*(barHeight+spacing);
-            }
-        }
-
+        stateManager.render();
         SDL_RenderPresent(renderer);
     }
 };
