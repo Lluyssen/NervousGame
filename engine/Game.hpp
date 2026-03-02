@@ -19,6 +19,9 @@ public:
             return false;
         }
 
+        if (TTF_Init() == -1)
+            std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
+
         window = SDL_CreateWindow(
             "Tower Defence",
             SDL_WINDOWPOS_CENTERED,
@@ -76,6 +79,7 @@ public:
     {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
+        TTF_Quit();
         SDL_Quit();
     }
 
