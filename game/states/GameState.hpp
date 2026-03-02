@@ -7,62 +7,63 @@
 class GameState : public IGameState
 {
 private:
-    Scene<TypeList<Position, Velocity>> *scenePosVel;
-    Scene<TypeList<Heal, Mana>> *sceneHealMana;
-    GameManager manager;
+    Scene<TypeList<Position, Velocity>> *_scenePosVel;
+    Scene<TypeList<Heal, Mana>> *_sceneHealMana;
+    GameManager _manager;
 
 public:
 
-    void onEnter(StateManager&) override 
+    bool allowUpdateBelow() const override { return false; }
+    bool allowRenderBelow() const override { return true; }
+
+    void onEnter(StateManager &) override
     {
         std::cout << "[GameState] Enter\n";
         // === Scenes ECS ===
-        
-        scenePosVel = &manager.createScene<TypeList<Position, Velocity>>("PosVelScene", true);
-        sceneHealMana = &manager.createScene<TypeList<Heal, Mana>>("HealManaScene", true);
+
+        _scenePosVel = &_manager.createScene<TypeList<Position, Velocity>>("PosVelScene", true);
+        _sceneHealMana = &_manager.createScene<TypeList<Heal, Mana>>("HealManaScene", true);
 
         // Position/Velocity entity
-        Entity e1 = scenePosVel->getRegistry().create();
-        scenePosVel->getRegistry().add<Position>(e1, {100, 100});
-        scenePosVel->getRegistry().add<Velocity>(e1, {50, 30});
-        scenePosVel->addSystem(new MovementSystem);
+        Entity e1 = _scenePosVel->getRegistry().create();
+        _scenePosVel->getRegistry().add<Position>(e1, {100, 100});
+        _scenePosVel->getRegistry().add<Velocity>(e1, {50, 30});
+        _scenePosVel->addSystem(new MovementSystem);
 
         // Heal/Mana entities
-        Entity e2 = sceneHealMana->getRegistry().create();
-        sceneHealMana->getRegistry().add<Heal>(e2, {20});
-        sceneHealMana->getRegistry().add<Mana>(e2, {15});
+        Entity e2 = _sceneHealMana->getRegistry().create();
+        _sceneHealMana->getRegistry().add<Heal>(e2, {20});
+        _sceneHealMana->getRegistry().add<Mana>(e2, {15});
 
-        Entity e22 = sceneHealMana->getRegistry().create();
-        sceneHealMana->getRegistry().add<Heal>(e22, {10});
-        sceneHealMana->getRegistry().add<Mana>(e22, {25});
+        Entity e22 = _sceneHealMana->getRegistry().create();
+        _sceneHealMana->getRegistry().add<Heal>(e22, {10});
+        _sceneHealMana->getRegistry().add<Mana>(e22, {25});
 
-        sceneHealMana->addSystem(new RegenSystem, 10);
-        sceneHealMana->addSystem(new PrintSystem, 50);
+        _sceneHealMana->addSystem(new RegenSystem, 10);
+        _sceneHealMana->addSystem(new PrintSystem, 50);
     }
 
-    void onExit(StateManager&) override 
+    void onExit(StateManager &) override
     {
         std::cout << "[GameState] Exit\n";
     }
 
     void handleEvent(StateManager &sm, const SDL_Event &e) override
     {
-
         if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
-            sm.changeState<PauseState>();
+            sm.pushState<PauseState>();
     }
 
     void update(StateManager &, float dt) override
     {
-        scenePosVel->update(dt);
-        sceneHealMana->update(dt);
+        _manager.update(dt);
     }
 
     void render(StateManager &sm) override
     {
-        auto* renderer = sm.getContext().renderer;
+        auto *renderer = sm.getContext().renderer;
         // --- Draw Position/Velocity entities ---
-        auto &regPV = scenePosVel->getRegistry();
+        auto &regPV = _scenePosVel->getRegistry();
         for (Entity e : regPV.getAliveEntities())
         {
             if (auto *pos = regPV.getIf<Position>(e))
@@ -74,7 +75,7 @@ public:
         }
 
         // --- Draw Heal/Mana entities as bars ---
-        auto &regHM = sceneHealMana->getRegistry();
+        auto &regHM = _sceneHealMana->getRegistry();
         int yOffset = 400;
         int barWidth = 100, barHeight = 10, spacing = 5;
         for (Entity e : regHM.getAliveEntities())

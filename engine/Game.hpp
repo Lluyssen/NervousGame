@@ -100,11 +100,11 @@ private:
                 switch (e.key.keysym.sym)
                 {
                 case SDLK_UP:
-                    std::cout << "Flèche Haut pressée\n";
+                    std::cout << "Flèche Haut pressée => Menu\n";
                     stateManager.changeState<MenuState>();
                     break;
                 case SDLK_DOWN:
-                    std::cout << "Flèche Bas pressée\n";
+                    std::cout << "Flèche Bas pressée => Game\n";
                     stateManager.changeState<GameState>();
                     break;
                 }
