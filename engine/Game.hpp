@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <iostream>
 #include "../ecs/ECS.hpp"
 #include "../game/Components.hpp"
@@ -22,6 +23,8 @@ public:
         if (TTF_Init() == -1)
             std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
 
+        IMG_Init(IMG_INIT_PNG);
+        context.assets = new AssetManager(renderer);
         window = SDL_CreateWindow(
             "Tower Defence",
             SDL_WINDOWPOS_CENTERED,
@@ -127,6 +130,8 @@ private:
         SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
         SDL_RenderClear(renderer);
         stateManager.render();
+        delete context.assets;  
+        IMG_Quit();
         SDL_RenderPresent(renderer);
     }
 };

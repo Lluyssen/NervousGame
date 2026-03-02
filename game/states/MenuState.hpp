@@ -5,45 +5,56 @@
 #include "GameState.hpp"
 #include <SDL2/SDL_ttf.h>
 
+constexpr int TILE_SIZE = 32;
+
 class MenuState : public IGameState {
 public:
     MenuState() {
         buttons = {
-            { ButtonType::Play,    "Jeu" },
-            { ButtonType::Settings,"Settings" },
-            { ButtonType::Credits, "Credits" }
+            { ButtonType::Play,    "JEU",      nullptr },
+            { ButtonType::Settings,"SETTINGS", nullptr },
+            { ButtonType::Credits, "CREDITS",  nullptr }
         };
-    }
-
-    ~MenuState() override {
-        for (auto& b : buttons) {
-            if (b.texture) SDL_DestroyTexture(b.texture);
-        }
-        if (font) TTF_CloseFont(font);
     }
 
     void onEnter(StateManager& sm) override {
         SDL_ShowCursor(SDL_ENABLE);
+
+        appearStep = 0;
+        hoverTick = 0;
+        transitioning = false;
+        transitionAlpha = 0;
         layoutDirty = true;
 
-        // Charger la font
-        font = TTF_OpenFont("assets/fonts/alagard.ttf", 28);
-        if (!font) {
-            SDL_Log("Failed to load font: %s", TTF_GetError());
-            return;
-        }
-
-        // Créer les textures texte
         auto* renderer = sm.getContext().renderer;
-        SDL_Color white{255,255,255,255};
+        auto* assets   = sm.getContext().assets;
 
-        for (auto& b : buttons) {
-            SDL_Surface* surf =
-                TTF_RenderUTF8_Blended(font, b.label.c_str(), white);
-            b.texture = SDL_CreateTextureFromSurface(renderer, surf);
-            b.textW = surf->w;
-            b.textH = surf->h;
-            SDL_FreeSurface(surf);
+        // --- Load textures via AssetManager (OWNERSHIP CENTRAL) ---
+        assets->loadTexture("menu_play",     "assets/ui/menu_play.png");
+        assets->loadTexture("menu_settings", "assets/ui/menu_settings.png");
+        assets->loadTexture("menu_credits",  "assets/ui/menu_credits.png");
+
+        buttons[0].texture = assets->getTexture("menu_play");
+        buttons[1].texture = assets->getTexture("menu_settings");
+        buttons[2].texture = assets->getTexture("menu_credits");
+
+        // --- Create background render target (OWNED by this state) ---
+        int w, h;
+        SDL_GetRendererOutputSize(renderer, &w, &h);
+
+        backgroundTarget = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA8888,
+            SDL_TEXTUREACCESS_TARGET,
+            w, h
+        );
+    }
+
+    void onExit(StateManager&) override {
+        // IMPORTANT : on détruit UNIQUEMENT ce que le state possède
+        if (backgroundTarget) {
+            SDL_DestroyTexture(backgroundTarget);
+            backgroundTarget = nullptr;
         }
     }
 
@@ -58,18 +69,29 @@ public:
         }
 
         if (e.type == SDL_MOUSEBUTTONDOWN &&
-            e.button.button == SDL_BUTTON_LEFT) {
+            e.button.button == SDL_BUTTON_LEFT &&
+            !transitioning) {
 
-            if (hovered == ButtonType::Play)
-                sm.changeState<GameState>();
-            else if (hovered == ButtonType::Settings)
-                SDL_Log("Settings clicked");
-            else if (hovered == ButtonType::Credits)
-                SDL_Log("Credits clicked");
+            if (hovered == ButtonType::Play) {
+                transitioning = true;
+                transitionAlpha = 0;
+            }
         }
     }
 
-    void update(StateManager&, float) override {}
+    void update(StateManager& sm, float) override {
+        if (appearStep < maxAppearStep)
+            appearStep++;
+
+        hoverTick = (hoverTick + 1) % 30;
+
+        if (transitioning) {
+            transitionAlpha = std::min<Uint8>(255, transitionAlpha + 32);
+            if (transitionAlpha >= 255) {
+                sm.changeState<GameState>();
+            }
+        }
+    }
 
     void render(StateManager& sm) override {
         auto* renderer = sm.getContext().renderer;
@@ -77,42 +99,50 @@ public:
         int w, h;
         SDL_GetRendererOutputSize(renderer, &w, &h);
 
-        if (layoutDirty || w != lastW || h != lastH) {
+        if (layoutDirty) {
             cachedRects = computeLayout(w, h);
-            lastW = w;
-            lastH = h;
             layoutDirty = false;
         }
 
-        // Fond
-        SDL_SetRenderDrawColor(renderer, 30, 30, 40, 255);
-        SDL_RenderClear(renderer);
+        renderBackground(renderer, w, h);
 
-        // Boutons + texte
+        // --- Render buttons ---
         for (size_t i = 0; i < cachedRects.size(); ++i) {
-            const auto& rect = cachedRects[i];
-            const auto& b = buttons[i];
+            SDL_Rect rect = cachedRects[i];
+            auto& btn = buttons[i];
 
-            bool isHover = (hovered == b.type);
+            int slide = (maxAppearStep - appearStep) * 4;
+            Uint8 alpha = appearStep * 32;
+            rect.y += slide;
 
-            if (isHover)
-                SDL_SetRenderDrawColor(renderer, 180, 180, 220, 255);
-            else
-                SDL_SetRenderDrawColor(renderer, 100, 100, 140, 255);
+            bool isHover = (hovered == btn.type);
+            bool pulse = hoverTick < 15;
 
+            Uint8 r = 100, g = 100, b = 140;
+            if (isHover && pulse) {
+                r = 180; g = 180; b = 220;
+            }
+
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(renderer, r, g, b, alpha);
             SDL_RenderFillRect(renderer, &rect);
 
-            // --- Texte centré ---
-            if (b.texture) {
-                SDL_Rect textRect;
-                textRect.w = b.textW;
-                textRect.h = b.textH;
-                textRect.x = rect.x + (rect.w - b.textW) / 2;
-                textRect.y = rect.y + (rect.h - b.textH) / 2;
-
-                SDL_RenderCopy(renderer, b.texture, nullptr, &textRect);
+            // --- Sprite bouton (pixel) ---
+            if (btn.texture) {
+                SDL_SetTextureAlphaMod(btn.texture, alpha);
+                SDL_RenderCopy(renderer, btn.texture, nullptr, &rect);
             }
         }
+
+        // --- Transition pixel ---
+        if (transitioning) {
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, transitionAlpha);
+            SDL_Rect full{0, 0, w, h};
+            SDL_RenderFillRect(renderer, &full);
+        }
+
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
     }
 
 private:
@@ -126,56 +156,75 @@ private:
     struct Button {
         ButtonType type;
         std::string label;
-        SDL_Texture* texture = nullptr;
-        int textW = 0;
-        int textH = 0;
+        SDL_Texture* texture; // NON-OWNING (AssetManager)
     };
 
+    // UI
     std::vector<Button> buttons;
     std::vector<SDL_Rect> cachedRects;
-
-    TTF_Font* font = nullptr;
-
-    bool layoutDirty = true;
-    int lastW = 0;
-    int lastH = 0;
-
     ButtonType hovered = ButtonType::None;
 
-    std::vector<SDL_Rect> computeLayout(int windowW, int windowH) const {
-        std::vector<SDL_Rect> rects;
+    // Animation pixel
+    int appearStep = 0;
+    const int maxAppearStep = 8;
+    int hoverTick = 0;
 
-        int buttonW = windowW / 4;
-        int buttonH = windowH / 12;
-        int spacing = buttonH / 2;
+    // Transition
+    bool transitioning = false;
+    Uint8 transitionAlpha = 0;
 
-        int totalH =
-            static_cast<int>(buttons.size()) * buttonH +
-            static_cast<int>(buttons.size() - 1) * spacing;
+    // Background (OWNED by MenuState)
+    SDL_Texture* backgroundTarget = nullptr;
 
-        int startY = (windowH - totalH) / 2;
-        int centerX = windowW / 2;
+    bool layoutDirty = true;
+
+    // --- Helpers ---
+
+    std::vector<SDL_Rect> computeLayout(int w, int h) const {
+        std::vector<SDL_Rect> r;
+
+        int bw = w / 3;
+        int bh = TILE_SIZE * 2;
+        int spacing = TILE_SIZE;
+
+        int totalH = buttons.size() * bh + (buttons.size() - 1) * spacing;
+        int y = (h - totalH) / 2;
+        int cx = w / 2;
 
         for (size_t i = 0; i < buttons.size(); ++i) {
-            rects.push_back({
-                centerX - buttonW / 2,
-                startY + static_cast<int>(i) * (buttonH + spacing),
-                buttonW,
-                buttonH
+            r.push_back({
+                cx - bw / 2,
+                y + int(i) * (bh + spacing),
+                bw,
+                bh
             });
         }
-
-        return rects;
+        return r;
     }
 
     ButtonType getButtonAt(int x, int y) const {
         for (size_t i = 0; i < cachedRects.size(); ++i) {
             const auto& r = cachedRects[i];
             if (x >= r.x && x <= r.x + r.w &&
-                y >= r.y && y <= r.y + r.h) {
+                y >= r.y && y <= r.y + r.h)
                 return buttons[i].type;
-            }
         }
         return ButtonType::None;
+    }
+
+    void renderBackground(SDL_Renderer* renderer, int w, int h) {
+        SDL_SetRenderTarget(renderer, backgroundTarget);
+
+        for (int y = 0; y < h; y += 8) {
+            for (int x = 0; x < w; x += 8) {
+                Uint8 v = Uint8((x + y + appearStep * 12) % 40);
+                SDL_SetRenderDrawColor(renderer, v, v, v + 20, 255);
+                SDL_Rect r{x, y, 8, 8};
+                SDL_RenderFillRect(renderer, &r);
+            }
+        }
+
+        SDL_SetRenderTarget(renderer, nullptr);
+        SDL_RenderCopy(renderer, backgroundTarget, nullptr, nullptr);
     }
 };
