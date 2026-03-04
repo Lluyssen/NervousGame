@@ -8,6 +8,8 @@
 #include "../ui/UIButton.hpp"
 #include "../ui/AnimatedBackGround.hpp"
 #include "../ui/ScreenFade.hpp"
+#include "../ui/AmbientParticles.hpp"
+#include "../ui/MenuTitle.hpp"
 
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
@@ -42,8 +44,10 @@ private:
     float parallaxX = 0.f;
     float parallaxY = 0.f;
     float parallaxStrength = 20.f;
+    AmbientParticles particles;
+    MenuTitle title;
+    SDL_Texture *titleTexture = nullptr;
 
-private:
     std::vector<SDL_Rect> computeLayout(int w, int h)
     {
         std::vector<SDL_Rect> rects;
@@ -107,6 +111,12 @@ public:
         auto *assets = sm.getContext().assets;
         auto *renderer = sm.getContext().renderer;
 
+        int w;
+        int h;
+        SDL_GetRendererOutputSize(renderer, &w, &h);
+        particles.init(120, w, h);
+        title.setPosition(w);
+
         appearTimer = 0.f;
         layoutDirty = true;
 
@@ -122,6 +132,12 @@ public:
             uiTexture = assets->getTexture("ui");
         }
 
+        if (!titleTexture)
+        {
+            assets->loadTexture("title", "assets/ui/title.png");
+            titleTexture = assets->getTexture("title");
+        }
+
         // click sound button
         if (!clickSound)
         {
@@ -133,6 +149,11 @@ public:
 
         // fond animé
         background = AnimatedBackground();
+
+        // création des couches de parallax
+        background.addLayer(0.2f); // loin
+        background.addLayer(0.5f); // milieu
+        background.addLayer(1.0f); // proche
 
         for (int i = 0;; i++)
         {
@@ -148,8 +169,13 @@ public:
             if (!tex)
                 break;
 
-            background.addFrame(tex);
+            // on ajoute la même animation à chaque layer
+            background.addFrame(0, tex);
+            background.addFrame(1, tex);
+            background.addFrame(2, tex);
         }
+
+        background.reset();
 
         // musique
         if (!bgMusic)
@@ -161,7 +187,6 @@ public:
         }
 
         // callbacks boutons
-
         buttons[0].onClick = [this]()
         {
             pendingAction = Action::Play;
@@ -179,8 +204,6 @@ public:
             pendingAction = Action::Exit;
             fade.start();
         };
-
-        rebuildLayout(renderer);
     }
 
     void onExit(StateManager &) override
@@ -238,6 +261,12 @@ public:
 
     void update(StateManager &sm, float dt) override
     {
+
+        int w;
+        int h;
+        SDL_GetRendererOutputSize(sm.getContext().renderer, &w, &h);
+        particles.update(dt, w, h);
+
         background.update(dt);
         appearTimer = std::min(appearTimer + dt, appearDuration);
         fade.update(dt);
@@ -275,13 +304,9 @@ public:
         int w, h;
         SDL_GetRendererOutputSize(renderer, &w, &h);
 
-        SDL_Rect bgRect{
-            (int)-parallaxX,
-            (int)-parallaxY,
-            w + (int)parallaxStrength * 2,
-            h + (int)parallaxStrength * 2};
-
-        background.render(renderer, bgRect);
+        background.render(renderer, w, h, parallaxX, parallaxY);
+        title.render(renderer, titleTexture);
+        particles.render(renderer);
 
         float appear = std::clamp(appearTimer / appearDuration, 0.f, 1.f);
 

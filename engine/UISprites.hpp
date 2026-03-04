@@ -12,4 +12,5 @@ namespace UISprites
     inline const SpriteDef Play     {{ 210,  45, 117, 45 }};
     inline const SpriteDef Options {{ 179, 266, 186, 45 }};
     inline const SpriteDef Exit {{ 212, 322, 118, 43 }};
+    inline const SpriteDef Title {{0,96,256,64}};
 }

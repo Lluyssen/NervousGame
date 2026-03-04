@@ -6,6 +6,7 @@
 class UIButton
 {
 private:
+
     SDL_Rect rect{};
     SDL_Rect src{};
     SDL_Rect visualRect{};
@@ -14,10 +15,14 @@ private:
 
     bool hovered = false;
     bool revealFinished = false;
+
     float scale = 1.0f;
 
 public:
+
     std::function<void()> onClick;
+
+public:
 
     void setSprite(const SDL_Rect &s)
     {
@@ -28,24 +33,27 @@ public:
     {
         rect = r;
 
-        float scale = std::min(
+        float s = std::min(
             float(rect.w) / src.w,
             float(rect.h) / src.h);
 
-        int drawW = std::round(src.w * scale);
-        int drawH = std::round(src.h * scale);
+        int drawW = std::round(src.w * s);
+        int drawH = std::round(src.h * s);
 
         visualRect =
-            {
-                rect.x + (rect.w - drawW) / 2,
-                rect.y + (rect.h - drawH) / 2,
-                drawW,
-                drawH};
+        {
+            rect.x + (rect.w - drawW) / 2,
+            rect.y + (rect.h - drawH) / 2,
+            drawW,
+            drawH
+        };
 
         reveal.generate(src, rect);
     }
 
-    bool contains(int x, int y) const
+public:
+
+    bool contains(int x,int y) const
     {
         return x >= rect.x &&
                x <= rect.x + rect.w &&
@@ -60,15 +68,18 @@ public:
 
     void click()
     {
-        if (onClick)
+        if(onClick)
             onClick();
     }
 
-    // Animation Button pixel -> stabilisation image fixe -> animation breath
-    void render(SDL_Renderer *renderer, SDL_Texture *texture, float t)
+public:
+
+    void render(SDL_Renderer* renderer, SDL_Texture* texture, float t)
     {
         float time = SDL_GetTicks() * 0.002f;
+
         float breathe = hovered ? 0.f : sin(time) * 0.03f;
+
         float targetScale = hovered ? 1.08f : 1.f;
 
         scale += (targetScale - scale) * 0.15f;
@@ -79,18 +90,45 @@ public:
 
         scaled.w *= finalScale;
         scaled.h *= finalScale;
+
         scaled.x -= (scaled.w - visualRect.w) / 2;
         scaled.y -= (scaled.h - visualRect.h) / 2;
+
+        /*
+            Shadow
+        */
+
+        int offset = hovered ? 6 : 4;
+        int alpha  = hovered ? 110 : 80;
+
+        SDL_Rect shadow = scaled;
+
+        shadow.x += offset;
+        shadow.y += offset;
+
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
+        SDL_RenderFillRect(renderer, &shadow);
+
+        /*
+            Button
+        */
 
         if (!revealFinished)
         {
             reveal.render(renderer, texture, t);
 
-            if (t >= 1.0f)
+            if (t >= 1.f)
                 revealFinished = true;
         }
         else
+        {
             SDL_RenderCopy(renderer, texture, &src, &scaled);
+        }
+
+        /*
+            Hover glow
+        */
 
         if (hovered)
         {
@@ -99,6 +137,8 @@ public:
             SDL_RenderFillRect(renderer, &scaled);
         }
     }
+
+public:
 
     void resetReveal()
     {

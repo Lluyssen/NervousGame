@@ -5,33 +5,73 @@
 class AnimatedBackground
 {
 private:
-    std::vector<SDL_Texture *> frames;
+    struct Layer
+    {
+        std::vector<SDL_Texture *> frames;
+        int frame = 0;
+        float speed = 0.3f;
+        float strength = 1.f;
+    };
+
+    std::vector<Layer> layers;
+
     float timer = 0.f;
-    int frame = 0;
-    float frameDuration = 0.3f;
 
 public:
-    void addFrame(SDL_Texture *tex)
+    void addLayer(float strength)
     {
-        frames.push_back(tex);
+        layers.push_back({});
+        layers.back().strength = strength;
+    }
+
+    void addFrame(int layer, SDL_Texture *tex)
+    {
+        if (layer >= (int)layers.size())
+            return;
+        layers[layer].frames.push_back(tex);
     }
 
     void update(float dt)
     {
         timer += dt;
 
-        if (timer >= frameDuration)
+        for (auto &l : layers)
         {
-            timer -= frameDuration;
-            frame = (frame + 1) % frames.size();
+            if (l.frames.empty())
+                continue;
+
+            if (timer >= l.speed)
+            {
+                l.frame = (l.frame + 1) % l.frames.size();
+            }
+        }
+
+        if (!layers.empty() && timer >= layers[0].speed)
+            timer = 0.f;
+    }
+
+    void render(SDL_Renderer *renderer, int w, int h, float px, float py)
+    {
+        for (auto &l : layers)
+        {
+            if (l.frames.empty())
+                continue;
+
+            SDL_Rect dst{
+                (int)(-px * l.strength),
+                (int)(-py * l.strength),
+                w + 80,
+                h + 80};
+
+            SDL_RenderCopy(renderer, l.frames[l.frame], nullptr, &dst);
         }
     }
 
-    void render(SDL_Renderer *renderer, const SDL_Rect &dst)
+    void reset()
     {
-        if (frames.empty())
-            return;
+        timer = 0.f;
 
-        SDL_RenderCopy(renderer, frames[frame], nullptr, &dst);
+        for (auto &l : layers)
+            l.frame = 0;
     }
 };
