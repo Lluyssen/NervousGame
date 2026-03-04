@@ -75,7 +75,7 @@ public:
         if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
             SDL_Log("Erreur SDL_mixer : %s", Mix_GetError());
 
-        IMG_Init(IMG_INIT_PNG);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
         window = SDL_CreateWindow(
             "Tower Defence",
@@ -91,6 +91,7 @@ public:
             return false;
         }
 
+        IMG_Init(IMG_INIT_PNG);
         renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
         if (!renderer)
