@@ -7,22 +7,32 @@
 class MenuBackground
 {
 private:
-    // Sprite animé utilisé comme background.
     AnimatedSprite _background;
 
-    // Décalage interpolé appliqué pour créer l'effet de parallaxe.
     Vector2 _offset{0, 0};
 
+    bool _ready = false;
+
 public:
-    // Initialise et charge la séquence d'animation du fond.
-    void init(GameContext &ctx)
+    // Charge une frame du background (utilisé pendant le loading)
+    void loadFrame(GameContext &ctx, const std::string &basePath, int index)
     {
-        _background.load(ctx, "../assets/ui/bg/frame", 41, 0.1f);
+        _background.loadFrame(ctx, basePath, index);
     }
 
-    // Met à jour l'animation et calcule le décalage selon la position de la souris.
+    // Appelé une fois toutes les frames chargées
+    void finalize()
+    {
+        _background.finalize(0.1f);
+        _ready = true;
+    }
+
+    // Mise à jour du background
     void update(float dt)
     {
+        if (!_ready)
+            return;
+
         _background.update(dt);
 
         Vector2 mouse = GetMousePosition();
@@ -36,9 +46,12 @@ public:
         _offset.y += (ny * strength - _offset.y) * 5.0f * dt;
     }
 
-    // Dessine le background en plein écran avec le décalage calculé.
+    // Dessine le background
     void draw(int w, int h)
     {
+        if (!_ready)
+            return;
+
         _background.drawFullscreen(w, h, _offset.x, _offset.y);
     }
 };

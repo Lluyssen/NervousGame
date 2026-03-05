@@ -6,26 +6,20 @@
 
 class GameContext;
 
-// Gère un sprite animé constitué d’une séquence de textures pour un rendu fluide.
+// Gère un sprite animé constitué d’une séquence de textures.
 class AnimatedSprite
 {
 private:
-    // Liste des textures représentant chaque frame de l’animation.
     std::vector<Texture2D *> _frames;
-
-    // Index de la frame actuelle.
     int _currentFrame = 0;
-
-    // Timer interne pour contrôler la vitesse d’animation.
     float _timer = 0.f;
-
-    // Durée d’affichage d’une frame.
     float _frameTime = 0.05f;
+    bool _ready = false;
 
 public:
     AnimatedSprite() = default;
 
-    // Charge les textures à partir d’un chemin de base et nombre de frames.
+    // Chargement classique (tout en une fois)
     void load(GameContext &ctx, const std::string &basePath, int frameCount, float frameTime = 0.05f)
     {
         _frames.clear();
@@ -37,11 +31,32 @@ public:
             Texture2D &tex = ctx.loadTexture(path);
             _frames.push_back(&tex);
         }
+        _ready = true;
     }
 
-    // Met à jour l’animation en passant à la frame suivante si nécessaire.
+    // Charge une seule frame (utilisé pour le loading progressif)
+    void loadFrame(GameContext &ctx, const std::string &basePath, int index)
+    {
+        std::string path = basePath + std::to_string(index) + ".png";
+        Texture2D &tex = ctx.loadTexture(path);
+        _frames.push_back(&tex);
+    }
+
+    // Appelé lorsque toutes les frames sont chargées
+    void finalize(float frameTime)
+    {
+        _frameTime = frameTime;
+        _ready = true;
+        _currentFrame = 0;
+        _timer = 0.f;
+    }
+
+    // Mise à jour de l’animation
     void update(float dt)
     {
+        if (!_ready || _frames.empty())
+            return;
+
         _timer += dt;
         if (_timer >= _frameTime)
         {
@@ -52,10 +67,10 @@ public:
         }
     }
 
-    // Dessine la frame actuelle en plein écran sans décalage.
+    // Dessin fullscreen
     void drawFullscreen(int width, int height)
     {
-        if (_frames.empty())
+        if (!_ready || _frames.empty())
             return;
 
         Texture2D &tex = *_frames[_currentFrame];
@@ -68,24 +83,21 @@ public:
             WHITE);
     }
 
-    // Dessine la frame actuelle en plein écran avec un décalage pour effet de parallaxe.
+    // Dessin fullscreen avec parallaxe
     void drawFullscreen(int w, int h, float offsetX, float offsetY)
     {
+        if (!_ready || _frames.empty())
+            return;
         Texture2D &tex = *_frames[_currentFrame];
-
-        float zoom = 1.1f; // 10% plus grand que l'écran
-
+        float zoom = 1.1f;
         float drawW = w * zoom;
         float drawH = h * zoom;
-
         Rectangle src{0, 0, (float)tex.width, (float)tex.height};
-
         Rectangle dst{
             (w - drawW) * 0.5f + offsetX,
             (h - drawH) * 0.5f + offsetY,
             drawW,
             drawH};
-
         DrawTexturePro(tex, src, dst, {0, 0}, 0.0f, WHITE);
     }
 };
