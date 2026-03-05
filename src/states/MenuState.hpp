@@ -10,19 +10,6 @@
 #include "menu/MenuTitle.hpp"
 #include "menu/MenuMusic.hpp"
 
-// État représentant le menu principal avec fond animé, boutons, PNJ et musique.
-#pragma once
-
-#include "../utils/StateManager.hpp"
-#include "raylib.h"
-#include "GameState.hpp"
-#include "../ui/Starfield.hpp"
-#include "menu/MenuBackground.hpp"
-#include "menu/MenuButtons.hpp"
-#include "menu/MenuNPC.hpp"
-#include "menu/MenuTitle.hpp"
-#include "menu/MenuMusic.hpp"
-
 // État du menu principal : orchestre fond, étoiles, UI, PNJ et musique.
 class MenuState : public IGameState
 {
