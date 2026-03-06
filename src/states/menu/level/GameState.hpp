@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "LevelState.hpp"
 #include "LevelNode.hpp"
+#include "../../../ui/petitMenu/PetitMenu.hpp"
 
 class GameState : public IGameState
 {
@@ -15,13 +16,33 @@ private:
 
     Vector2 _bgOffset{0, 0};
 
+    PetitMenu _tooltip;
+    Texture2D _tooltipTexture;
+
+    float _zoom = 1.05f;
+
+    // conversion map -> écran
+    Vector2 worldToScreen(Vector2 world, int w, int h, float drawW, float drawH)
+    {
+        float scaleX = drawW / (float)_mapTexture.width;
+        float scaleY = drawH / (float)_mapTexture.height;
+
+        return {
+            world.x * scaleX + (w - drawW) * 0.5f + _bgOffset.x,
+            world.y * scaleY + (h - drawH) * 0.5f + _bgOffset.y};
+    }
+
 public:
     void onEnter(StateManager &sm) override
     {
         auto &ctx = sm.getContext();
 
         _mapTexture = LoadTexture("../assets/ui/map.png");
-        _lockAnim.loadSheet(ctx,"../assets/ui/flag/Graysprite.png", 6, 0.2f);
+
+        _lockAnim.loadSheet(ctx, "../assets/ui/flag/Graysprite.png", 6, 0.2f);
+
+        _tooltipTexture = LoadTexture("../assets/ui/papyrus.png");
+        _tooltip.init(_tooltipTexture);
 
         _levels =
             {
@@ -42,37 +63,49 @@ public:
         Vector2 mouse = GetMousePosition();
 
         int unlocked = ctx.gethighestUnlockedLevel();
+
         ctx.updateMusic();
 
         int w = ctx.getWidth();
         int h = ctx.getHeight();
+        float drawW = w * _zoom;
+        float drawH = h * _zoom;
 
-        float zoom = 1.05f;
-
-        float drawW = w * zoom;
-        float drawH = h * zoom;
-
-        float scaleX = drawW / (float)_mapTexture.width;
-        float scaleY = drawH / (float)_mapTexture.height;
+        bool tooltipVisible = false;
 
         for (auto &node : _levels)
         {
             bool unlockedNode = node.id() <= unlocked;
 
-            Vector2 pos{
-                node.position().x * scaleX + (w - drawW) * 0.5f + _bgOffset.x,
-                node.position().y * scaleY + (h - drawH) * 0.5f + _bgOffset.y};
+            Vector2 pos = worldToScreen(node.position(), w, h, drawW, drawH);
 
             if (node.update(dt, mouse, pos, unlockedNode))
                 sm.changeState<LevelState>(node.id());
+
+            if (!tooltipVisible && CheckCollisionPointCircle(mouse, pos, 30))
+            {
+                std::vector<std::string> lines =
+                    {
+                        TextFormat("Level %d", node.id() + 1),
+                        "Difficulty: Easy",
+                        "Reward: 200 gold"};
+
+                _tooltip.show({pos.x, pos.y - 40}, lines);
+
+                tooltipVisible = true;
+            }
         }
 
-        // effet parallaxe souris
+        if (!tooltipVisible)
+            _tooltip.hide();
+
+        // parallaxe souris
         float nx = (mouse.x / w) - 0.5f;
         float ny = (mouse.y / h) - 0.5f;
 
-        _bgOffset.x += (nx * 40.0f - _bgOffset.x) * 4.0f * dt;
-        _bgOffset.y += (ny * 40.0f - _bgOffset.y) * 4.0f * dt;
+        _bgOffset.x += (nx * 40.f - _bgOffset.x) * 4.f * dt;
+        _bgOffset.y += (ny * 40.f - _bgOffset.y) * 4.f * dt;
+
         _lockAnim.update(dt);
     }
 
@@ -88,14 +121,10 @@ public:
         float drawW = w * zoom;
         float drawH = h * zoom;
 
-        float scaleX = drawW / (float)_mapTexture.width;
-        float scaleY = drawH / (float)_mapTexture.height;
-
         ClearBackground(BLACK);
 
         Rectangle src{
-            0,
-            0,
+            0, 0,
             (float)_mapTexture.width,
             (float)_mapTexture.height};
 
@@ -113,16 +142,17 @@ public:
         {
             bool unlockedNode = node.id() <= unlocked;
 
-            Vector2 pos{
-                node.position().x * scaleX + (w - drawW) * 0.5f + _bgOffset.x,
-                node.position().y * scaleY + (h - drawH) * 0.5f + _bgOffset.y};
+            Vector2 pos = worldToScreen(node.position(), w, h, drawW, drawH);
 
             node.draw(pos, _lockAnim, unlockedNode);
         }
+
+        _tooltip.draw(w, h);
     }
 
     void onExit(StateManager &) override
     {
         UnloadTexture(_mapTexture);
+        UnloadTexture(_tooltipTexture);
     }
 };

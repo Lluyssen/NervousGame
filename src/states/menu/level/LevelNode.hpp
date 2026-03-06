@@ -2,6 +2,7 @@
 
 #include "raylib.h"
 #include "../../../ui/AnimatedSprite.hpp"
+#include <math.h>
 
 class GameContext;
 
@@ -13,7 +14,7 @@ private:
 
     bool _completed = false;
     bool _hover = false;
-
+    float _pulseTimer = 0.f;
     AnimatedSprite _idleAnim;
     AnimatedSprite _completedAnim;
 
@@ -47,7 +48,7 @@ public:
     bool update(float dt, Vector2 mouse, Vector2 pos, bool unlocked)
     {
         float radius = 30;
-
+        _pulseTimer += dt;
         _hover = CheckCollisionPointCircle(mouse, pos, radius);
 
         if (unlocked)
@@ -69,13 +70,15 @@ public:
 
     void draw(Vector2 pos, AnimatedSprite &lockAnim, bool unlocked)
     {
-        float scale = 1;
+        float scale = 2;
 
         if (!unlocked)
         {
             lockAnim.draw(pos, scale);
             return;
         }
+        if (unlocked && !_completed)
+            scale += sinf(_pulseTimer * 3.0f) * 0.08f;
 
         if (_completed)
             _completedAnim.draw(pos, scale);
