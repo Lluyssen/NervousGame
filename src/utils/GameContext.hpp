@@ -3,6 +3,8 @@
 #include "raylib.h"
 #include <string>
 #include <unordered_map>
+#include "MusicManager.hpp"
+
 
 /*
     Contexte global partagé par tous les states.
@@ -11,14 +13,17 @@
 class GameContext
 {
 private:
+    int _highestUnlockedLevel = 0;
     int _screenWidth = 1280;
     int _screenHeight = 720;
 
     // Cache simple de textures
     std::unordered_map<std::string, Texture2D> _textures;
+    MusicManager _music;
+    bool _musicLoaded = false;
 
 public:
-    GameContext() = default;
+    GameContext(void) = default;
 
     ~GameContext(void)
     {
@@ -27,6 +32,7 @@ public:
 
     int getWidth() const { return _screenWidth; }
     int getHeight() const { return _screenHeight; }
+    int gethighestUnlockedLevel() const { return _highestUnlockedLevel; }
 
     void setResolution(int w, int h)
     {
@@ -60,5 +66,20 @@ public:
         for (auto &[k, tex] : _textures)
             UnloadTexture(tex);
         _textures.clear();
+    }
+
+    void initMusic(const std::string &path)
+    {
+        if (!_musicLoaded)
+        {
+            _music.load(path); // "../assets/audio/menu_music.mp3"
+            _musicLoaded = true;
+        }
+    }
+
+    void updateMusic()
+    {
+        if (_musicLoaded)
+            _music.update();
     }
 };

@@ -54,7 +54,7 @@ public:
         float nx = (mouse.x / screenWidth) - 0.5f;
         float ny = (mouse.y / screenHeight) - 0.5f;
 
-        reg.template forEachEntityWith<StarComponents>([&](Entity, Position &pos, Velocity &vel, StarData &s) {
+        reg.template forEachEntityWith<StarComponents>([&](Entity, Position &pos, Velocity &, StarData &s) {
             float twinkle = (sinf(s.phase * 3.0f) + 1.0f) * 0.5f;
             float brightness = 160 + twinkle * 80;
 
@@ -75,8 +75,6 @@ inline void spawnStarfield(Registry<StarComponents> &reg, int count, int w, int 
         Entity e = reg.create();
         reg.add<Position>(e, {(float)GetRandomValue(0, w), (float)GetRandomValue(0, h)});
         reg.add<Velocity>(e, {(float)GetRandomValue(-20, 20), (float)GetRandomValue(-20, 20)});
-        reg.add<StarData>(e, {GetRandomValue((int)(sizeMin * 10), (int)(sizeMax * 10)) / 10.0f,
-                              GetRandomValue(0, 628) / 100.0f,
-                              0.0f});
+        reg.add<StarData>(e, {GetRandomValue((int)(sizeMin * 10), (int)(sizeMax * 10)) / 10.0f, GetRandomValue(0, 628) / 100.0f, 0.0f});
     }
 }

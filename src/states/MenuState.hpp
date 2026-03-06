@@ -2,13 +2,13 @@
 
 #include "../utils/StateManager.hpp"
 #include "raylib.h"
-#include "GameState.hpp"
+#include "menu/level/GameState.hpp"
 #include "../ui/Starfield.hpp"
 #include "menu/MenuBackground.hpp"
 #include "menu/MenuButtons.hpp"
 #include "menu/MenuNPC.hpp"
 #include "menu/MenuTitle.hpp"
-#include "menu/MenuMusic.hpp"
+#include "../utils/MusicManager.hpp"
 
 // État du menu principal : gère fond animé, étoiles, UI, PNJ et musique.
 class MenuState : public IGameState
@@ -31,7 +31,6 @@ private:
     MenuButtons _buttons;
     MenuTitle _title;
     MenuNPC _npc;
-    MenuMusic _music;
 
     // ECS utilisé pour le champ d'étoiles (3 couches de profondeur)
     Registry<StarComponents> _starRegistry;
@@ -68,7 +67,7 @@ public:
         // Initialisation UI et musique
         _buttons.init(ctx);
         _npc.init();
-        _music.load();
+        ctx.initMusic("../assets/audio/menu_music.mp3");
 
         // Initialisation ECS étoiles
         _starRegistry = Registry<StarComponents>();
@@ -110,7 +109,7 @@ public:
         dt = std::min(dt, 0.05f); // limite les gros dt (pause/debug)
 
         _background.update(dt);
-        _music.update();
+        ctx.updateMusic();
         _npc.update(dt);
 
         // Mise à jour des étoiles
@@ -237,7 +236,6 @@ public:
     // Nettoyage lors de la sortie de l’état
     void onExit(StateManager &) override
     {
-        _music.unload();
         UnloadTexture(_loadingTexture);
     }
 };

@@ -26,7 +26,7 @@ public:
     }
 
     // Met à jour le timer de l’animation.
-    void update(UIButton &btn, float dt) override
+    void update(UIButton &, float dt) override
     {
         _timer += dt;
     }
@@ -90,11 +90,8 @@ public:
 
                 float noise = fmodf(sinf(x * 12.9898f + y * 78.233f) * 43758.5453f, 1.0f);
 
-                if (dist + noise * 0.25f <= progress &&
-                    insideRounded(r, cx, cy, radius))
-                {
+                if (dist + noise * 0.25f <= progress && insideRounded(r, cx, cy, radius))
                     DrawRectangle(px, py, _blockSize, _blockSize, Color{0, 0, 0, 120});
-                }
             }
         }
 
@@ -102,12 +99,7 @@ public:
         int fs = 28;
         int tw = MeasureText(btn.text().c_str(), fs);
 
-        DrawText(
-            btn.text().c_str(),
-            r.x + (r.width - tw) / 2,
-            r.y + (r.height - fs) / 2,
-            fs,
-            btn.hover() ? YELLOW : WHITE);
+        DrawText(btn.text().c_str(), r.x + (r.width - tw) / 2, r.y + (r.height - fs) / 2, fs, btn.hover() ? YELLOW : WHITE);
 
         // Marque le bouton comme terminé lorsque l’animation est finie.
         if (progress >= 1.0f)
