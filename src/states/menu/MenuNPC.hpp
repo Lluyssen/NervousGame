@@ -53,7 +53,7 @@ public:
             70};
 
         DrawRectangleRounded(bubble, 0.4f, 8, Color{255, 255, 255, 230});
-        DrawRectangleRoundedLines(bubble, 0.4f, 8, 2, BLACK);
+        DrawRectangleRoundedLinesEx(bubble, 0.4f, 8, 2, BLACK);
         DrawText(_text.c_str(), bubble.x + 10, bubble.y + 20, 20, BLACK);
     }
 };

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(SDL2_TD VERSION 1.0 LANGUAGES CXX)
+project(NervousGame VERSION 1.0 LANGUAGES CXX)
 
 # ===============================
 # Standard C++
@@ -11,7 +11,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ===============================
 # Trouver Raylib
 # ===============================
-find_package(raylib REQUIRED)
+include(FetchContent)
+
+# ---- Raylib ----
+FetchContent_Declare(
+    raylib
+    GIT_REPOSITORY https://github.com/raysan5/raylib.git
+    GIT_TAG 5.5
+)
+
+FetchContent_MakeAvailable(raylib)
 
 # ===============================
 # Sources du projet
@@ -30,14 +39,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ===============================
 # Lien avec Raylib
 # ===============================
-target_link_libraries(${PROJECT_NAME}
-    raylib
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE raylib
 )
 
 # ===============================
 # Options de compilation
 # ===============================
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+#target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
 # ===============================
 # Debug / Sanitizers (optionnel)
