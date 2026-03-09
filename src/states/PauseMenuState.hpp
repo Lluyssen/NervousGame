@@ -14,59 +14,52 @@ class PauseMenuState : public IGameState
 {
 private:
     std::vector<UIButton> _buttons;
-    const char *title = "PAUSED";
-    int fs = 60;
+    static constexpr const char *TITLE = "PAUSED";
+    static constexpr int FONT_SIZE = 60;
+    static constexpr int BUTTON_WIDTH = 260;
+    static constexpr int BUTTON_HEIGHT = 60;
+    static constexpr int BUTTON_SPACING = 80;
 
 public:
-    bool allowRenderBelow(void) const override
-    {
-        return true; // on voit le jeu derrière
-    }
-
-    bool allowUpdateBelow(void) const override
-    {
-        return false;
-    }
+    bool allowRenderBelow() const override { return true; } // On voit le jeu derrière
+    bool allowUpdateBelow() const override { return false; }
 
     void onEnter(StateManager &sm) override
     {
         auto &ctx = sm.getContext();
-
         int w = ctx.getWidth();
         int h = ctx.getHeight();
 
-        int bw = 260;
-        int bh = 60;
-
-        int startY = h / 2 - 80;
+        int startY = h / 2 - BUTTON_SPACING;
 
         _buttons.clear();
+        _buttons.reserve(3);
 
-        _buttons.emplace_back(
-            "Resume",
-            Rectangle{(float)(w / 2 - bw / 2), (float)(startY), (float)bw, (float)bh});
-
-        _buttons.emplace_back(
-            "Restart",
-            Rectangle{(float)(w / 2 - bw / 2), (float)(startY + 80), (float)bw, (float)bh});
-
-        _buttons.emplace_back(
-            "Quit to Menu",
-            Rectangle{(float)(w / 2 - bw / 2), (float)(startY + 160), (float)bw, (float)bh});
-
-        for (auto &b : _buttons)
+        // Crée les boutons avec animations PixelReveal et ScaleHover
+        std::vector<std::string> labels = {"Resume", "Restart", "Quit to Menu"};
+        for (size_t i = 0; i < labels.size(); ++i)
         {
-            b.setEnterAnimation(std::make_unique<PixelRevealAnimation>());
-            b.setHoverAnimation(std::make_unique<ScaleHoverAnimation>());
+            Rectangle rect{
+                (float)(w / 2 - BUTTON_WIDTH / 2),
+                (float)(startY + i * BUTTON_SPACING),
+                (float)BUTTON_WIDTH,
+                (float)BUTTON_HEIGHT};
+
+            _buttons.emplace_back(labels[i], rect);
+            _buttons.back().setEnterAnimation(std::make_unique<PixelRevealAnimation>());
+            _buttons.back().setHoverAnimation(std::make_unique<ScaleHoverAnimation>());
         }
     }
 
     void update(StateManager &sm, float dt) override
     {
+        dt = std::min(dt, 0.05f); // Clamp dt pour stabilité
+
         Vector2 mouse = GetMousePosition();
 
         for (size_t i = 0; i < _buttons.size(); ++i)
         {
+            // update renvoie true si cliqué
             if (_buttons[i].update(dt, false))
                 activate(sm, (int)i);
         }
@@ -78,15 +71,14 @@ public:
     void render(StateManager &sm) override
     {
         auto &ctx = sm.getContext();
-
         int w = ctx.getWidth();
         int h = ctx.getHeight();
 
-        // overlay sombre
+        // Overlay sombre semi-transparent
         DrawRectangle(0, 0, w, h, Color{0, 0, 0, 150});
-        int tw = MeasureText(title, fs);
 
-        DrawText(title, w / 2 - tw / 2, h / 2 - 180, fs, Color{255, 220, 120, 255});
+        int tw = MeasureText(TITLE, FONT_SIZE);
+        DrawText(TITLE, w / 2 - tw / 2, h / 2 - 180, FONT_SIZE, Color{255, 220, 120, 255});
 
         for (auto &b : _buttons)
             b.draw();
@@ -96,16 +88,16 @@ public:
     {
         switch (id)
         {
-        case 0: // Resume
+        case 0:
             sm.popState();
-            break;
-
-        case 1: // Restart
+            break; // Resume
+        case 1:
             sm.changeState<GameState>();
-            break;
-
-        case 2: // Quit menu
+            break; // Restart
+        case 2:
             sm.changeState<MenuState>();
+            break; // Quit menu
+        default:
             break;
         }
     }
