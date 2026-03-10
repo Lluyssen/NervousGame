@@ -3,6 +3,7 @@
 #include <core/StateManager.hpp>
 #include <states/PauseMenuState.hpp>
 
+class PauseMenuState;
 
 class MapState : public IGameState
 {

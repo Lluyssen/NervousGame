@@ -11,8 +11,6 @@ class StateManager;
 class IGameState
 {
 public:
-    virtual ~IGameState() = default;
-
     // Lifecycle
     virtual void onEnter(StateManager &) {}
     virtual void onExit(StateManager &) {}

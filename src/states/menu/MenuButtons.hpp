@@ -14,36 +14,43 @@ class MenuButtons
 private:
     // Liste des boutons du menu (polymorphisme possible : PixelButton, etc.)
     std::vector<std::unique_ptr<UIButton>> _buttons;
-    int spacing = 150;
+    int spacing = 80;
 
 public:
     // Initialise les boutons et leurs animations
     void init(GameContext &ctx)
     {
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        std::cout << "MenuButtons::init()\n";
+         
+        const float w = ctx.getWidth();
+        const float h = ctx.getHeight();
 
-        int bw = 320;
-        int bh = 70;
-        int startY = h / 2;
+        const float bw = 320;
+        const float bh = 70;
+        const float startY = h / 2;
 
         _buttons.clear();
-        _buttons.reserve(3);
+        _buttons.reserve(4);
+
+        _buttons.push_back(
+            std::make_unique<PixelButton>(
+                "LevelOne",
+                Rectangle{(w / 2 - bw / 2), startY, bw, bh}));
 
         _buttons.push_back(
             std::make_unique<PixelButton>(
                 "Game",
-                Rectangle{(float)(w / 2 - bw / 2), (float)startY, (float)bw, (float)bh}));
+                Rectangle{(w / 2 - bw / 2), (startY + spacing), bw, bh}));
 
         _buttons.push_back(
             std::make_unique<PixelButton>(
                 "Settings",
-                Rectangle{(float)(w / 2 - bw / 2), (float)(startY + spacing), (float)bw, (float)bh}));
+                Rectangle{(w / 2 - bw / 2), (startY + spacing * 2), bw, bh}));
 
         _buttons.push_back(
             std::make_unique<PixelButton>(
                 "Quit",
-                Rectangle{(float)(w / 2 - bw / 2), (float)(startY + spacing * 2), (float)bw, (float)bh}));
+                Rectangle{(w / 2 - bw / 2), (startY + spacing * 3), bw, bh}));
 
         for (auto &b : _buttons)
         {

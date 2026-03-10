@@ -10,6 +10,10 @@
 #include <core/MusicManager.hpp>
 #include <core/StateManager.hpp>
 
+class LevelOneState;
+
+class LevelOneState;
+
 // État du menu principal : gère fond animé, étoiles, UI, PNJ et musique.
 class MenuState : public IGameState
 {
@@ -47,9 +51,10 @@ private:
 
     enum class ButtonID
     {
-        Play = 0,
-        Options = 1,
-        Quit = 2
+        LevelOne = 0,
+        Play = 1,
+        Options = 2,
+        Quit = 3
     };
 
 public:
@@ -191,6 +196,10 @@ public:
     {
         switch (id)
         {
+        case ButtonID::LevelOne: // Thomas : PAS DE MAGIC NUMBER !!
+            // ici faut ouvrir le niveau + render une map basique petee + faire en sorte de pouvoir poser des tourelles
+            sm.changeState<LevelOneState>();
+            break;
         case ButtonID::Play:
             sm.changeState<GameState>();
             break;

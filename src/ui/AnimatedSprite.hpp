@@ -3,8 +3,7 @@
 #include "raylib.h"
 #include <vector>
 #include <string>
-
-class GameContext;
+#include "../core/GameContext.hpp"
 
 class AnimatedSprite
 {

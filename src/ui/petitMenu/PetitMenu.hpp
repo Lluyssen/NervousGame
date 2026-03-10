@@ -20,6 +20,12 @@ private:
     float _rotation = 0.f;
 
 public:
+    PetitMenu() = default;
+    virtual ~PetitMenu()
+    {
+        _bg = nullptr;
+    }
+
     void init(Texture2D &background)
     {
         _bg = &background;

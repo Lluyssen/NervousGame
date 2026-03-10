@@ -6,12 +6,15 @@
 #include "states/SandBoxState.hpp"
 
 const bool START_IN_SANDBOX = false;
+#include "states/include/LevelOneState.h"
 
 int main(void)
 {
     // Contexte global
     GameContext context;
-    context.setResolution(1920, 1080);
+
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+    context.setResolution(1600, 1050);
 
     // Init raylib
     InitWindow(context.getWidth(), context.getHeight(), "Tower Defense");

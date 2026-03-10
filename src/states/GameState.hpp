@@ -7,6 +7,8 @@
 #include <states/PauseMenuState.hpp>
 #include <states/MapState.hpp>
 
+class PauseMenuState;
+
 class GameState : public IGameState
 {
 private:
