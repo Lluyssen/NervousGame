@@ -31,7 +31,6 @@ private:
     std::unique_ptr<UIAnimation> _hoverAnim;
 
 public:
-
     virtual ~UIButton(void) = default;
 
     // Constructeur avec texte et rectangle.
@@ -56,13 +55,12 @@ public:
     void resetAnimations(void)
     {
         _entered = false;
-
         if (_enterAnim)
             _enterAnim->reset();
     }
 
     // Vérifie si l’animation d’entrée est terminée.
-    bool enterFinished() const
+    bool enterFinished(void) const
     {
         return _entered;
     }

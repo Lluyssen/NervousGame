@@ -100,7 +100,7 @@ public:
     }
 
     // Dessin des boutons
-    void draw()
+    void draw(void)
     {
         for (auto &b : _buttons)
             b->draw();

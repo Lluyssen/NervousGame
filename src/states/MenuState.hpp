@@ -36,7 +36,7 @@ private:
     std::unique_ptr<StarfieldSystem> _nearStars;
 
     // Loading screen
-    Texture2D *_loadingTexture = nullptr; // ← maintenant pointeur sûr
+    Texture2D *_loadingTexture = nullptr;
     int _bgFramesLoaded = 0;
     static constexpr int BG_TOTAL_FRAMES = 41;
 
@@ -195,7 +195,7 @@ public:
             sm.changeState<GameState>();
             break;
         case ButtonID::Quit:
-            exit(0); // ← quitte proprement, pas de ClearWindow en plein render
+            exit(0);
             break;
         default:
             break;
