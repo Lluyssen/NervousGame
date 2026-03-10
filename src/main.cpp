@@ -27,7 +27,7 @@ int main(void)
 
     // Premier état
     if (START_IN_SANDBOX)
-        stateManager.pushState<SandBoxState>();
+        stateManager.pushState<LevelOneState>();
     else
         stateManager.pushState<MenuState>();
 

@@ -14,7 +14,7 @@ class MenuButtons
 private:
     // Liste des boutons du menu (polymorphisme possible : PixelButton, etc.)
     std::vector<std::unique_ptr<UIButton>> _buttons;
-    int spacing = 80;
+    int spacing = 150;
 
 public:
     // Initialise les boutons et leurs animations
@@ -30,12 +30,7 @@ public:
         const float startY = h / 2;
 
         _buttons.clear();
-        _buttons.reserve(4);
-
-        _buttons.push_back(
-            std::make_unique<PixelButton>(
-                "LevelOne",
-                Rectangle{(w / 2 - bw / 2), startY, bw, bh}));
+        _buttons.reserve(3);
 
         _buttons.push_back(
             std::make_unique<PixelButton>(
