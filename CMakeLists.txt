@@ -22,16 +22,16 @@ FetchContent_MakeAvailable(raylib)
 # ECS (via FetchContent)
 # =========================
 FetchContent_Declare(
-    ecs_repo
+    ecs
     GIT_REPOSITORY https://github.com/Lluyssen/ECS.git
     GIT_TAG main
 )
-FetchContent_MakeAvailable(ecs_repo)
+FetchContent_MakeAvailable(ecs)
 
 # =========================
 # Sources du projet
 # =========================
-file(GLOB_RECURSE SRC_FILES src/*.cpp)
+file(GLOB_RECURSE SRC_FILES src/TDMapGenerator.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
