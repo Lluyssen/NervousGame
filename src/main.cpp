@@ -6,18 +6,16 @@
 
 int main(void)
 {
-    // Initialisation raylib
+    // Contexte global
     GameContext context;
-
     context.setResolution(1920, 1080);
 
+    // Init raylib
     InitWindow(context.getWidth(), context.getHeight(), "Tower Defense");
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);
     InitAudioDevice();
 
-    // Contexte global du jeu
-    
     // Manager de states
     StateManager stateManager(context);
 
@@ -32,15 +30,21 @@ int main(void)
         // Update logique
         stateManager.update(dt);
 
-        // Render
         BeginDrawing();
         ClearBackground(BLACK);
 
+        // Render
         stateManager.render();
 
         EndDrawing();
+
+        // Update musique (important pour raylib)
+        context.updateMusic();
     }
 
+    // Nettoyage propre
+    context.unloadAllTextures();
+    CloseAudioDevice();
     CloseWindow();
 
     return 0;

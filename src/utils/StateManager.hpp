@@ -40,13 +40,12 @@ private:
     std::vector<std::function<void()>> _pending;
 
 public:
-    explicit StateManager(GameContext &ctx) : _context(ctx)
+    explicit StateManager(GameContext &ctx)
+        : _context(ctx)
     {
         _stack.reserve(8);
         _pending.reserve(8);
     }
-
-    ~StateManager(void) = default;
 
     GameContext &getContext()
     {
@@ -56,16 +55,26 @@ public:
     template <typename T, typename... Args>
     void pushState(Args &&...args)
     {
+        // Capture the arguments by value in a tuple
+        auto argsTuple = std::make_tuple(std::forward<Args>(args)...);
+
         _pending.emplace_back(
-            [this, args...]()
+            [this, argsTuple = std::move(argsTuple)]() mutable
             {
-                auto state = std::make_unique<T>(args...);
+                // Apply the tuple to construct the state
+                auto state = std::apply(
+                    [](auto &&...unpackedArgs)
+                    {
+                        return std::make_unique<T>(std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
+                    },
+                    std::move(argsTuple));
+
                 state->onEnter(*this);
                 _stack.push_back(std::move(state));
             });
     }
 
-    void popState(void)
+    void popState()
     {
         _pending.emplace_back(
             [this]()
@@ -81,8 +90,10 @@ public:
     template <typename T, typename... Args>
     void changeState(Args &&...args)
     {
+        auto argsTuple = std::make_tuple(std::forward<Args>(args)...);
+
         _pending.emplace_back(
-            [this, args...]()
+            [this, argsTuple = std::move(argsTuple)]() mutable
             {
                 while (!_stack.empty())
                 {
@@ -90,7 +101,13 @@ public:
                     _stack.pop_back();
                 }
 
-                auto state = std::make_unique<T>(args...);
+                auto state = std::apply(
+                    [](auto &&...unpackedArgs)
+                    {
+                        return std::make_unique<T>(std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
+                    },
+                    std::move(argsTuple));
+
                 state->onEnter(*this);
                 _stack.push_back(std::move(state));
             });
@@ -109,7 +126,7 @@ public:
         applyPending();
     }
 
-    void render(void)
+    void render()
     {
         int start = 0;
 
@@ -126,10 +143,11 @@ public:
             _stack[i]->render(*this);
     }
 
-    IGameState *top(void)
+    IGameState *top()
     {
         if (_stack.empty())
             return nullptr;
+
         return _stack.back().get();
     }
 
@@ -145,9 +163,11 @@ public:
         return nullptr;
     }
 
-    void clear(void)
+    void clear()
     {
-        _pending.emplace_back( [this]() {
+        _pending.emplace_back(
+            [this]()
+            {
                 while (!_stack.empty())
                 {
                     _stack.back()->onExit(*this);
@@ -157,10 +177,11 @@ public:
     }
 
 private:
-    void applyPending(void)
+    void applyPending()
     {
         for (auto &cmd : _pending)
             cmd();
+
         _pending.clear();
     }
 };

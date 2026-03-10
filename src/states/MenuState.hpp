@@ -14,18 +14,16 @@
 class MenuState : public IGameState
 {
 private:
-    // Phases internes du menu
     enum class Phase
     {
         Loading,
         UIReveal,
         Idle
     };
-
     Phase _phase = Phase::Loading;
     float _timer = 0.f;
 
-    // Sous-systèmes du menu
+    // Sous-systèmes
     MenuBackground _background;
     MenuButtons _buttons;
     MenuTitle _title;
@@ -38,16 +36,15 @@ private:
     std::unique_ptr<StarfieldSystem> _nearStars;
 
     // Loading screen
-    Texture2D _loadingTexture{};
+    Texture2D *_loadingTexture = nullptr; // ← maintenant pointeur sûr
     int _bgFramesLoaded = 0;
     static constexpr int BG_TOTAL_FRAMES = 41;
 
-    // Constantes pour la barre de progression
+    // Barre de progression
     static constexpr float BAR_WIDTH_PERCENT = 0.4f;
     static constexpr float BAR_HEIGHT_PERCENT = 0.03f;
     static constexpr float BAR_Y_POS_PERCENT = 0.85f;
 
-    // Enum pour les boutons
     enum class ButtonID
     {
         Play = 0,
@@ -62,7 +59,8 @@ public:
     {
         auto &ctx = sm.getContext();
 
-        _loadingTexture = LoadTexture("../assets/ui/loading.png");
+        // Charge la texture via GameContext (sécurisé)
+        _loadingTexture = &ctx.loadTexture("../assets/ui/loading.png");
         _bgFramesLoaded = 0;
 
         int w = ctx.getWidth();
@@ -88,10 +86,9 @@ public:
     void update(StateManager &sm, float dt) override
     {
         auto &ctx = sm.getContext();
-        if (dt > 0.05f)
-            dt = 0.05f; // Clamp global pour stabilité
+        dt = std::min(dt, 0.05f);
 
-        // Chargement progressif du background (2 frames par update pour fluidité)
+        // Chargement progressif du background
         if (_bgFramesLoaded < BG_TOTAL_FRAMES)
         {
             for (int i = 0; i < 2 && _bgFramesLoaded < BG_TOTAL_FRAMES; ++i)
@@ -99,12 +96,8 @@ public:
             if (_bgFramesLoaded == BG_TOTAL_FRAMES)
                 _background.finalize();
 
-            // Mettre à jour les boutons pendant loading pour PixelReveal/ScaleHover
             _buttons.update(dt);
-
-            // Fond animé pendant loading
             _background.update(dt);
-
             return;
         }
 
@@ -125,20 +118,20 @@ public:
             _timer += dt;
             if (_timer > 0.2f)
             {
-                _buttons.resetAnimations(); // prépare PixelReveal
+                _buttons.resetAnimations();
                 _phase = Phase::UIReveal;
             }
             break;
 
         case Phase::UIReveal:
-            _buttons.update(dt); // continue PixelReveal
+            _buttons.update(dt);
             if (_buttons.enterFinished())
                 _phase = Phase::Idle;
             break;
 
         case Phase::Idle:
         {
-            int action = _buttons.update(dt); // ScaleHover + interaction
+            int action = _buttons.update(dt);
             if (action >= 0)
                 activate(sm, static_cast<ButtonID>(action));
         }
@@ -153,13 +146,13 @@ public:
         int h = ctx.getHeight();
 
         // Écran de chargement
-        if (_bgFramesLoaded < BG_TOTAL_FRAMES)
+        if (_bgFramesLoaded < BG_TOTAL_FRAMES && _loadingTexture)
         {
             ClearBackground(BLACK);
 
-            Rectangle src{0.f, 0.f, (float)_loadingTexture.width, (float)_loadingTexture.height};
+            Rectangle src{0.f, 0.f, (float)_loadingTexture->width, (float)_loadingTexture->height};
             Rectangle dst{0.f, 0.f, (float)w, (float)h};
-            DrawTexturePro(_loadingTexture, src, dst, {0, 0}, 0.f, WHITE);
+            DrawTexturePro(*_loadingTexture, src, dst, {0, 0}, 0.f, WHITE);
 
             float progress = std::clamp((float)_bgFramesLoaded / BG_TOTAL_FRAMES, 0.f, 1.f);
 
@@ -177,18 +170,15 @@ public:
             int textWidth = MeasureText(text.c_str(), 20);
             DrawText(text.c_str(), x + barWidth / 2 - textWidth / 2, y + barHeight + 10, 20, WHITE);
 
-            _background.draw(w, h); // fond partiellement chargé
-
+            _background.draw(w, h);
             return;
         }
 
-        // Rendu normal du menu
+        // Rendu normal
         _background.draw(w, h);
-
         _farStars->draw(_starRegistry);
         _midStars->draw(_starRegistry);
         _nearStars->draw(_starRegistry);
-
         _title.draw(w, h);
 
         if (_phase == Phase::UIReveal || _phase == Phase::Idle)
@@ -205,7 +195,7 @@ public:
             sm.changeState<GameState>();
             break;
         case ButtonID::Quit:
-            CloseWindow();
+            exit(0); // ← quitte proprement, pas de ClearWindow en plein render
             break;
         default:
             break;
@@ -214,6 +204,6 @@ public:
 
     void onExit(StateManager &) override
     {
-        UnloadTexture(_loadingTexture);
+        // plus besoin de UnloadTexture, GameContext gère les textures
     }
 };

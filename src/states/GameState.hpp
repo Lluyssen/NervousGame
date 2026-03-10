@@ -75,7 +75,7 @@ public:
             return;
         }
 
-        int unlocked = ctx.gethighestUnlockedLevel();
+        int unlocked = ctx.getHighestUnlockedLevel();
 
         // Mise à jour des nodes
         for (auto &node : _levels)
@@ -123,14 +123,10 @@ public:
 
         // Dessin de la map
         Rectangle src{0.f, 0.f, (float)_mapTexture.width, (float)_mapTexture.height};
-        Rectangle dst{
-            (w - drawW) * 0.5f + _bgOffset.x,
-            (h - drawH) * 0.5f + _bgOffset.y,
-            drawW,
-            drawH};
+        Rectangle dst{(w - drawW) * 0.5f + _bgOffset.x, (h - drawH) * 0.5f + _bgOffset.y, drawW, drawH};
         DrawTexturePro(_mapTexture, src, dst, {0.f, 0.f}, 0.f, WHITE);
 
-        int unlocked = ctx.gethighestUnlockedLevel();
+        int unlocked = ctx.getHighestUnlockedLevel();
 
         for (auto &node : _levels)
         {

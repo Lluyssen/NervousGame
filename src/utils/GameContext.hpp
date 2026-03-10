@@ -1,8 +1,10 @@
 #pragma once
 
-#include "raylib.h"
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
+
+#include "raylib.h"
 #include "MusicManager.hpp"
 
 /*
@@ -17,22 +19,24 @@ private:
     int _screenWidth = 1280;
     int _screenHeight = 720;
 
-    // Cache simple de textures
+    // Cache de textures
     std::unordered_map<std::string, Texture2D> _textures;
+
     MusicManager _music;
     bool _musicLoaded = false;
 
 public:
-    GameContext(void) = default;
+    GameContext() = default;
 
-    ~GameContext(void)
+    ~GameContext()
     {
         unloadAllTextures();
     }
 
+    // -------- Screen --------
+
     int getWidth() const { return _screenWidth; }
     int getHeight() const { return _screenHeight; }
-    int gethighestUnlockedLevel() const { return _highestUnlockedLevel; }
 
     void setResolution(int w, int h)
     {
@@ -40,39 +44,59 @@ public:
         _screenHeight = h;
     }
 
-    // Charge une texture avec cache
+    // -------- Progression --------
+
+    int getHighestUnlockedLevel() const
+    {
+        return _highestUnlockedLevel;
+    }
+
+    void setHighestUnlockedLevel(int level)
+    {
+        _highestUnlockedLevel = level;
+    }
+
+    // -------- Texture Management --------
+
     Texture2D &loadTexture(const std::string &path)
     {
+        if (!IsWindowReady())
+        {
+            throw std::runtime_error(
+                "Attempted to LoadTexture before InitWindow()");
+        }
+
         auto it = _textures.find(path);
 
         if (it != _textures.end())
             return it->second;
 
         Texture2D tex = LoadTexture(path.c_str());
-        _textures[path] = tex;
+        auto [iter, inserted] = _textures.emplace(path, tex);
 
-        return _textures[path];
+        return iter->second;
     }
 
-    // Récupère une texture déjà chargée
     Texture2D &getTexture(const std::string &path)
     {
         return _textures.at(path);
     }
 
-    // Décharge toutes les textures
-    void unloadAllTextures(void)
+    void unloadAllTextures()
     {
-        for (auto &[k, tex] : _textures)
+        for (auto &[path, tex] : _textures)
             UnloadTexture(tex);
+
         _textures.clear();
     }
+
+    // -------- Music --------
 
     void initMusic(const std::string &path)
     {
         if (!_musicLoaded)
         {
-            _music.load(path); // "../assets/audio/menu_music.mp3"
+            _music.load(path);
             _musicLoaded = true;
         }
     }
