@@ -144,6 +144,8 @@ int main()
             }
         }
 
+        DrawFPS(10, 10);
+
         EndDrawing();
     }
 
