@@ -60,4 +60,13 @@ namespace utils
         return {p.x / w, p.y / h};
     }
 
+    inline void safeUnload(Texture2D &tex)
+    {
+        if (tex.id)
+        {
+            UnloadTexture(tex);
+            tex = {};
+        }
+    }
+
 }

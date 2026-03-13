@@ -336,4 +336,10 @@ public:
 
         DrawTexturePro(tex, src, dst, {0, 0}, 0, WHITE);
     }
+
+    void unload(void)
+    {
+        UnloadTexture(*_sheet);
+        _sheet = nullptr;
+    }
 };

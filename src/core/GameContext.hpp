@@ -6,11 +6,18 @@
 
 #include "raylib.h"
 #include "MusicManager.hpp"
+#include "AssetManager.hpp"
 
 /*
     Contexte global partagé par tous les states.
     Permet d'accéder aux ressources du jeu.
 */
+
+struct LevelCompletion
+{
+    bool pending = false;
+    int completedLevel = -1;
+};
 
 class GameContext
 {
@@ -25,6 +32,8 @@ private:
 
     MusicManager _music;
     bool _musicLoaded = false;
+
+    LevelCompletion _levelCompletion;
 
 public:
     GameContext(void) = default;
@@ -82,7 +91,7 @@ public:
 
     Texture2D &getTexture(const std::string &path)
     {
-        return _textures.at(path);
+        return loadTexture(path);
     }
 
     void unloadAllTextures()
@@ -108,5 +117,28 @@ public:
     {
         if (_musicLoaded)
             _music.update();
+    }
+
+    // -------- Level --------
+
+    void setLevelCompleted(int id)
+    {
+        _levelCompletion.pending = true;
+        _levelCompletion.completedLevel = id;
+    }
+
+    bool hasPendingLevelCompletion(void) const
+    {
+        return _levelCompletion.pending;
+    }
+
+    int getCompletedLevel(void) const
+    {
+        return _levelCompletion.completedLevel;
+    }
+
+    void clearLevelCompletion(void)
+    {
+        _levelCompletion.pending = false;
     }
 };

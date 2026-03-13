@@ -38,8 +38,7 @@ private:
     std::vector<std::function<void()>> _pending;
 
 public:
-    explicit StateManager(GameContext &ctx)
-        : _context(ctx)
+    explicit StateManager(GameContext &ctx) : _context(ctx)
     {
         _stack.reserve(8);
         _pending.reserve(8);
@@ -124,7 +123,7 @@ public:
         applyPending();
     }
 
-    void render()
+    void render(void)
     {
         int start = 0;
 
@@ -141,7 +140,7 @@ public:
             _stack[i]->render(*this);
     }
 
-    IGameState *top()
+    IGameState *top(void)
     {
         if (_stack.empty())
             return nullptr;
@@ -150,7 +149,7 @@ public:
     }
 
     template <typename T>
-    T *getState()
+    T *getState(void)
     {
         for (auto &s : _stack)
         {
@@ -161,7 +160,7 @@ public:
         return nullptr;
     }
 
-    void clear()
+    void clear(void)
     {
         _pending.emplace_back(
             [this]()
@@ -175,11 +174,10 @@ public:
     }
 
 private:
-    void applyPending()
+    void applyPending(void)
     {
         for (auto &cmd : _pending)
             cmd();
-
         _pending.clear();
     }
 };

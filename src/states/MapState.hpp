@@ -8,11 +8,9 @@ class PauseMenuState;
 class MapState : public IGameState
 {
 private:
-
     Texture2D _background{};
 
 public:
-
     void onEnter(StateManager &sm) override
     {
         _background = LoadTexture("../assets/ui/bg/Level.jpg");
@@ -21,11 +19,17 @@ public:
     void update(StateManager &sm, float dt) override
     {
         // ouvrir pause
-        (void) dt;
+        (void)dt;
         if (IsKeyPressed(KEY_ESCAPE))
         {
             sm.pushState<PauseMenuState>();
             return;
+        }
+        if (IsKeyPressed(KEY_SPACE))
+        {
+            auto &ctx = sm.getContext();
+            ctx.setLevelCompleted(ctx.getCompletedLevel() + 1);
+            sm.changeState<LevelSelectionState>();
         }
     }
 
@@ -39,18 +43,16 @@ public:
         ClearBackground(BLACK);
 
         Rectangle src{
-            0,0,
+            0, 0,
             (float)_background.width,
-            (float)_background.height
-        };
+            (float)_background.height};
 
         Rectangle dst{
-            0,0,
+            0, 0,
             (float)w,
-            (float)h
-        };
+            (float)h};
 
-        DrawTexturePro(_background,src,dst,{0,0},0,WHITE);
+        DrawTexturePro(_background, src, dst, {0, 0}, 0, WHITE);
     }
 
     void onExit(StateManager &) override

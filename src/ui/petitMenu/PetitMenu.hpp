@@ -19,7 +19,8 @@ private:
 
     Sound *_openSound = nullptr;
 
-    UITextureAnimation *_animation = nullptr; // animation appliquée à la texture
+    UITextureAnimation *_animation = nullptr;
+    ; // animation appliquée à la texture
 
     bool _visible = false;
     bool _soundPlayed = false;
@@ -48,15 +49,14 @@ public:
     }
 
     // injecte une animation externe (PixelReveal, Fade, etc.)
-    void setAnimation(UITextureAnimation *anim)
+    void setAnimation(UITextureAnimation &anim)
     {
-        _animation = anim;
+        _animation = &anim;
     }
 
     void update(float dt)
     {
-        if (_animation)
-            _animation->update(dt);
+        _animation->update(dt);
 
         if (_soundPlayed)
         {
@@ -93,9 +93,7 @@ public:
         {
             _animScale = 0.6f;
             _soundPlayed = true;
-
-            if (_animation)
-                _animation->reset();
+            _animation->reset();
         }
 
         _pos = pos;
@@ -176,22 +174,14 @@ public:
         cy = std::clamp(cy, halfH, screenH - halfH);
 
         // Rectangle source : la texture entière
-        Rectangle src{
-            0,
-            0,
-            (float)_bg->width,
-            (float)_bg->height};
+        Rectangle src{0, 0, (float)_bg->width, (float)_bg->height};
 
         // Rectangle destination : position et taille à l'écran
-        Rectangle dst{
-            cx - halfW,
-            cy - halfH,
-            w,
-            h};
+        Rectangle dst{cx - halfW, cy - halfH, w, h};
 
         // Si une animation est active et pas terminée,
         // on lui délègue le rendu de la texture
-        if (_animation && !_animation->finished())
+        if (!_animation->finished())
             _animation->draw(*_bg, src, dst);
         else
             // Sinon on dessine simplement la texture
@@ -205,12 +195,7 @@ public:
         {
             float textX = cx - _lineWidths[i] * 0.5f;
 
-            DrawText(
-                _lines[i].c_str(),
-                textX,
-                textY,
-                _cachedFontSize,
-                BLACK);
+            DrawText(_lines[i].c_str(), textX, textY, _cachedFontSize, BLACK);
 
             // Décalage pour la ligne suivante
             textY += _cachedFontSize + 4;
