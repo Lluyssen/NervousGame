@@ -60,8 +60,10 @@ public:
         if (!texture.id)
             return;
 
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         for (float x = -texW; x < w; x += texW)
         {

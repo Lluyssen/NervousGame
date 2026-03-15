@@ -14,11 +14,10 @@ int main(void)
     // Contexte global
     GameContext context;
 
-    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
-    context.setResolution(1920, 1080);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
     // Init raylib
-    InitWindow(context.getWidth(), context.getHeight(), "Tower Defense");
+    InitWindow(1920, 1080, "Tower Defense");
     HideCursor();
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);

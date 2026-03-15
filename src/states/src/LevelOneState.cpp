@@ -1,80 +1,59 @@
 #include "../include/LevelOneState.h"
 
-LevelOneState::LevelOneState()
-{
-    _ballPosition.x = 100.0;
-    _ballPosition.y = 100.0;
-    _mousePosition = _ballPosition;
-    _textureMap = LoadTexture("../assets/temporary_sprites/LevelOneMap.png");
-    _towerWheelChoiceTexture = LoadTexture("../assets/temporary_sprites/TowerWheelChoice.png");
-    _fullTower = LoadTexture("../assets/temporary_sprites/Chat_GPT_Towers_SpriteSheet.png");
-    _archerTowerTexture = LoadTexture("../assets/temporary_sprites/ArcherTowers.png");
-    _preciseTower.x = 150;      // position X dans le sprite
-    _preciseTower.y = 55;      // position Y dans le sprite
-    _preciseTower.width = 320; // largeur du sprite
-    _preciseTower.height = 440; // hauteur du sprite
-    _towerWheelChoiceRectangle = { 0, 0, static_cast<float>(_towerWheelChoiceTexture.width), static_cast<float>(_towerWheelChoiceTexture.height) };
-    _textureMapRectangle = { 0, 0, static_cast<float>(_textureMap.width), static_cast<float>(_textureMap.height) };
-    _bDoTowerWheelAnimationStarted = false;
-    _animTime = 0.0f;
-    _bIsPlaceTowerWheelIsDisplayed = false;
-    _tempoBool = false;
-    _bIsArcherTowerDisplayed = false;
-}
+LevelOneState::LevelOneState(){}
+LevelOneState::~LevelOneState(){}
 
-LevelOneState::~LevelOneState()
-{
-    _ballPosition.x = 100.0;
-    _ballPosition.y = 100.0;
-    _mousePosition = _ballPosition;
-    UnloadTexture(_fullTower);
-    UnloadTexture(_towerWheelChoiceTexture);
-    UnloadTexture(_textureMap);
-    UnloadTexture(_archerTowerTexture);
-    _bDoTowerWheelAnimationStarted = false;
-    _animTime = 0.0f;
-    _tempoBool = false;
-    _bIsPlaceTowerWheelIsDisplayed = false;
-    _bIsArcherTowerDisplayed = false;
-}
-
-void LevelOneState::onEnter(StateManager& rStateManager)
-{
-    Vector2 ballPosition = { -100.0f, -100.0f };
-
-    Rectangle dest = { 0, 0, 1280, 800 };
-    // clear previous screen draws
-
-    BeginDrawing();
-
-    ShowCursor();
-    ClearBackground(RAYWHITE);
-    DrawTexturePro(_textureMap, _textureMapRectangle, dest, {0,0}, 0.0f, WHITE);
-
-    EndDrawing();
-}
-
-void LevelOneState::displayTowerWheelAnimation(float dt)
-{
-    if (_bDoTowerWheelAnimationStarted)
+void LevelOneState::onEnter(StateManager &sm)
     {
-        _animTime += dt;
+        auto &ctx = sm.getContext();
 
-        if (_animTime >= _animDuration)
+        _mapTexture = LoadTexture("../assets/ui/map.png");
+
+        _lockAnim.loadSheet(ctx, "../assets/ui/flag/Graysprite.png", 6, 0.2f);
+
+        _tooltipTexture = LoadTexture("../assets/ui/papyrus.png");
+        _tooltip.init(_tooltipTexture);
+
+        _levels =
+            {
+                {0, {160, 120}},
+                {1, {700, 650}},
+                {2, {1100, 250}},
+                {3, {1020, 740}},
+                {4, {300, 700}}};
+
+        for (auto &n : _levels)
+            n.init(ctx);
+    }
+
+    void LevelOneState::update(StateManager &sm, float dt)
+    {
+        auto &ctx = sm.getContext();
+
+        Vector2 mouse = GetMousePosition();
+
+        int unlocked = ctx.getHighestUnlockedLevel();
+
+        ctx.updateMusic();
+
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
+        float drawW = w * _zoom;
+        float drawH = h * _zoom;
+
+        bool tooltipVisible = false;
+
+        if (IsKeyPressed(KEY_ESCAPE))
         {
-            _animTime = _animDuration;
-            _bDoTowerWheelAnimationStarted = false;
+            sm.pushState<PauseMenuState>();
+            return;
         }
-        else
+
+        for (auto &node : _levels)
         {
-            float t = _animTime / _animDuration;
-            float scale = t;
-
-            Rectangle source = { 0, 0, static_cast<float>(_towerWheelChoiceTexture.width), static_cast<float>(_towerWheelChoiceTexture.height) };
-
-            float finalSize = 256;
-
-            Rectangle dest = { 550.0f, 430.0f, finalSize * scale, finalSize * scale };
+            bool unlockedNode = node.id() <= unlocked;
 
             Vector2 origin = { dest.width / 2, dest.height / 2 };
 
@@ -151,78 +130,51 @@ bool LevelOneState::didPlayerClickedOnTowerPlace()
         retVal = true;
     }
 
-    return retVal;
-}
-
-void LevelOneState::drawTowerWheelChoice()
-{
-    Rectangle dest = { 580, 434, 256, 256 };
-    DrawTexturePro(_towerWheelChoiceTexture, _towerWheelChoiceRectangle, dest, {static_cast<float>(_towerWheelChoiceTexture.width)/2.0f, static_cast<float>(_towerWheelChoiceTexture.height)/2.2f}, 0.0f, WHITE);
-}
-
-void LevelOneState::drawArcherTower()
-{
-    Rectangle origin = { 0, 0, 200.0, static_cast<float>(_archerTowerTexture.height) };
-    Rectangle dest = { 800.0f, 360.0f, 256, 256 };
-    DrawTexturePro(_archerTowerTexture, origin, dest, {static_cast<float>(_archerTowerTexture.width)/2.0f, static_cast<float>(_archerTowerTexture.height)/2.2f}, 0.0f, WHITE);
-}
-
-void LevelOneState::update(StateManager& rStateManager, float dt)
-{
-    // draw background map
-    Rectangle dest = { 0, 0, 1280, 800 };
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
-    DrawTexturePro(_textureMap, _textureMapRectangle, dest, { 0, 0 }, 0.0f, WHITE);
-
-    if (_bIsPlaceTowerWheelIsDisplayed)
+    void LevelOneState::render(StateManager &sm)
     {
-        drawTowerWheelChoice();
-    }
-    else if (_bIsArcherTowerDisplayed)
-    {
-        drawArcherTower();
-    }
+        auto &ctx = sm.getContext();
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-    {
-        _mousePosition = GetMousePosition();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
-        // check si la roue pour poser la tour est visible ou non
-        if (_bIsPlaceTowerWheelIsDisplayed)
+        float zoom = 1.05f;
+
+        float drawW = w * zoom;
+        float drawH = h * zoom;
+
+        ClearBackground(BLACK);
+
+        Rectangle src{
+            0, 0,
+            (float)_mapTexture.width,
+            (float)_mapTexture.height};
+
+        Rectangle dst{
+            (w - drawW) * 0.5f + _bgOffset.x,
+            (h - drawH) * 0.5f + _bgOffset.y,
+            drawW,
+            drawH};
+
+        DrawTexturePro(_mapTexture, src, dst, {0, 0}, 0, WHITE);
+
+        int unlocked = ctx.getHighestUnlockedLevel();
+
+        for (auto &node : _levels)
         {
-            // check si le joueur a clique sur la roue ou non pour poser une tour
-            if (didPlayerClickedOnWheel())
-            {
-                _bIsPlaceTowerWheelIsDisplayed = false;
-                _bIsArcherTowerDisplayed = true;
-                _temporaryMousePositionVector = _mousePosition;
-                DrawTexturePro(_textureMap, _textureMapRectangle, dest, { 0, 0 }, 0.0f, WHITE);
+            bool unlockedNode = node.id() <= unlocked;
 
-                // ici faut placer une tourelle et faire disparaitre la roue
-            }
-            // faire disparaitre la wheel
-            _bIsPlaceTowerWheelIsDisplayed = false;
+            Vector2 pos = worldToScreen(node.position(), w, h, drawW, drawH);
+
+            node.draw(pos, _lockAnim, unlockedNode);
         }
-        else
-        {
-            if (didPlayerClickedOnTowerPlace())
-            {
-                _wheelCenter = _mousePosition;
-                _bIsPlaceTowerWheelIsDisplayed = true;
-            }
-        }
+
+        _tooltip.draw(w, h);
     }
 
-    EndDrawing();
-}
-
-void LevelOneState::render(StateManager& rStateManager)
-{
-
-}
-
-void LevelOneState::onExit(StateManager& rStateManager)
-{
-
-}
+    void LevelOneState::onExit(StateManager &)
+    {
+        UnloadTexture(_mapTexture);
+        UnloadTexture(_tooltipTexture);
+    }

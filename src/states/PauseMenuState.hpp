@@ -27,8 +27,10 @@ public:
     void onEnter(StateManager &sm) override
     {
         auto &ctx = sm.getContext();
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         int startY = h / 2 - BUTTON_SPACING;
 
@@ -69,8 +71,10 @@ public:
     void render(StateManager &sm) override
     {
         auto &ctx = sm.getContext();
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         // Overlay sombre semi-transparent
         DrawRectangle(0, 0, w, h, Color{0, 0, 0, 150});

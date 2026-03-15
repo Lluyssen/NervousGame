@@ -20,8 +20,10 @@ public:
     // Initialise les boutons et leurs animations
     void init(GameContext &ctx)
     {
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         int bw = 320;
         int bh = 70;

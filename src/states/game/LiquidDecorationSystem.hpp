@@ -47,7 +47,7 @@ public:
             _liquid[i].setPos(_pos[i]);
         }
 
-        onResize(ctx.getWidth(), ctx.getHeight());
+        onResize(GetScreenWidth(), GetScreenHeight());
     }
 
     void update(GameContext &, float dt) override

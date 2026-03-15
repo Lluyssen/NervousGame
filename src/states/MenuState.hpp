@@ -63,8 +63,10 @@ public:
         _loadingTexture = &ctx.loadTexture("../assets/ui/loading.png");
         _bgFramesLoaded = 0;
 
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        // int w = ctx.getWidth();
+        // int h = ctx.getHeight();
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         _buttons.init(ctx);
         _npc.init();
@@ -142,8 +144,10 @@ public:
     void render(StateManager &sm) override
     {
         auto &ctx = sm.getContext();
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         // Écran de chargement
         if (_bgFramesLoaded < BG_TOTAL_FRAMES && _loadingTexture)

@@ -48,7 +48,8 @@ public:
     {
         _particles.reserve(MAX_PARTICLES);
 
-        onResize(ctx.getWidth(), ctx.getHeight());
+        //onResize(ctx.getWidth(), ctx.getHeight());
+        onResize(GetScreenWidth(), GetScreenHeight());
     }
 
     void update(GameContext &ctx, float dt) override

@@ -54,15 +54,18 @@ public:
         _haloTexture = LoadTexture("../assets/ui/levelSelect/halo.png");
         _arrowTexture = LoadTexture("../assets/ui/levelSelect/Arrow.png");
 
-        onResize(ctx.getWidth(), ctx.getHeight());
+        //onResize(ctx.getWidth(), ctx.getHeight());
+        onResize(GetScreenWidth(), GetScreenHeight());
     }
 
     void update(GameContext &ctx, float dt) override
     {
         Vector2 mouse = GetMousePosition();
 
-        int w = ctx.getWidth();
-        int h = ctx.getHeight();
+        
+        
+        int w = GetScreenWidth();
+        int h = GetScreenHeight();
 
         int unlocked = ctx.getHighestUnlockedLevel();
         bool hoveredFound = false;

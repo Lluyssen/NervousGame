@@ -42,7 +42,8 @@ public:
 
     void draw(GameContext &ctx) override
     {
-        _tooltip.draw(ctx.getWidth(), ctx.getHeight());
+        //_tooltip.draw(ctx.getWidth(), ctx.getHeight());
+        _tooltip.draw(GetScreenWidth(), GetScreenHeight());
     }
 
     void unload(void) override

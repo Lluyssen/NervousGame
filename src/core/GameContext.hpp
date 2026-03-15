@@ -6,7 +6,6 @@
 
 #include "raylib.h"
 #include "MusicManager.hpp"
-#include "AssetManager.hpp"
 
 /*
     Contexte global partagé par tous les states.
@@ -24,8 +23,6 @@ class GameContext
 private:
     int _highestUnlockedLevel = 0;
     int _selectedLevel = -1;
-    int _screenWidth = 1280;
-    int _screenHeight = 720;
 
     // Cache de textures
     std::unordered_map<std::string, Texture2D> _textures;
@@ -45,16 +42,8 @@ public:
 
     // -------- Screen --------
 
-    int getWidth(void) const { return _screenWidth; }
-    int getHeight(void) const { return _screenHeight; }
     void setSelectedLevel(int id) { _selectedLevel = id; }
     int getSelectedLevel(void) const { return _selectedLevel; }
-
-    void setResolution(int w, int h)
-    {
-        _screenWidth = w;
-        _screenHeight = h;
-    }
 
     // -------- Progression --------
 
