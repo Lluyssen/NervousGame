@@ -5,6 +5,8 @@
 
 class PauseMenuState;
 
+class LevelSelectionState;
+
 class MapState : public IGameState
 {
 private:

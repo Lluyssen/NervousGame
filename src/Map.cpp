@@ -131,7 +131,7 @@ public:
 #include <map>
 #include "raylib.h"
 
-int main()
+/*int main()
 {
     // Initialization
     //--------------------------------------------------------------------------------------
@@ -241,4 +241,4 @@ int main()
 
         EndDrawing();
     }
-}
+}*/

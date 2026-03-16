@@ -19,6 +19,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(raylib)
 
+#add_compile_options(-Wall -Werror -pedantic)
+
 # =========================
 # ECS (via FetchContent)
 # =========================
@@ -44,7 +46,7 @@ FetchContent_MakeAvailable(json)
 # =========================
 # Sources du projet
 # =========================
-file(GLOB_RECURSE SRC_FILES src/main.cpp)
+file(GLOB_RECURSE SRC_FILES src/*.cpp)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 

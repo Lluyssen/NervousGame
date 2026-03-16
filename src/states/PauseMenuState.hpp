@@ -55,8 +55,6 @@ public:
     {
         dt = std::min(dt, 0.05f); // Clamp dt pour stabilité
 
-        Vector2 mouse = GetMousePosition();
-
         for (size_t i = 0; i < _buttons.size(); ++i)
         {
             // update renvoie true si cliqué

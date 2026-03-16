@@ -6,13 +6,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-#pragma once
-
-#include "raylib.h"
-#include <vector>
-#include <string>
-#include <fstream>
-#include <nlohmann/json.hpp>
+#include "core/GameContext.hpp"
 
 // Classe utilitaire pour gérer différentes formes d'animations sprites :
 // - frames individuelles

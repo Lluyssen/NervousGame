@@ -9,37 +9,42 @@
 
 class LevelOneState : public IGameState
 {
+// # PUBLIC FUNCTIONS
 public:
     LevelOneState();
     ~LevelOneState();
-    void onEnter(StateManager &sm) override;
-    void update(StateManager &sm, float dt) override;
-    void render(StateManager &sm) override;
-    void onExit(StateManager &) override;
+    void onEnter(StateManager& rStateManager) override;
+    void update(StateManager& rStateManager, float dt) override;
+    void render(StateManager& rStateManager) override;
+    void onExit(StateManager& rStateManager) override;
 
+// # PRIVATE FUNCTIONS
 private:
-    Texture2D _mapTexture{};
-    AnimatedSprite _lockAnim;
+    void displayTowerWheelAnimation(float dt);
+    bool didPlayerClickedOnWheel();
+    bool didPlayerClickedOnTowerPlace();
+    void drawTowerWheelChoice();
+    void drawArcherTower();
 
-    std::vector<LevelNode> _levels;
-
-    Vector2 _bgOffset{0, 0};
-
-    PetitMenu _tooltip;
-    Texture2D _tooltipTexture;
-
-    float _zoom = 1.05f;
-
-    // conversion map -> écran
-    Vector2 worldToScreen(Vector2 world, int w, int h, float drawW, float drawH)
-    {
-        float scaleX = drawW / (float)_mapTexture.width;
-        float scaleY = drawH / (float)_mapTexture.height;
-
-        return {
-            world.x * scaleX + (w - drawW) * 0.5f + _bgOffset.x,
-            world.y * scaleY + (h - drawH) * 0.5f + _bgOffset.y};
-    }
+// # PRIVATE VARIABLES
+private:
+    Vector2 _ballPosition;
+    Vector2 _mousePosition;
+    Texture2D _fullTower;
+    Texture2D _towerWheelChoiceTexture;
+    Texture2D _textureMap;
+    Texture2D _archerTowerTexture;
+    Rectangle _preciseTower;
+    Rectangle _towerWheelChoiceRectangle;
+    Rectangle _textureMapRectangle;
+    bool _bDoTowerWheelAnimationStarted;
+    float _animTime;
+    const float _animDuration = 1.0f;
+    bool _bIsPlaceTowerWheelIsDisplayed;
+    Vector2 _wheelCenter;
+    bool _tempoBool;
+    bool _bIsArcherTowerDisplayed;
+    Vector2 _temporaryMousePositionVector;
 };
 
 #endif

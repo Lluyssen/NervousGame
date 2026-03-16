@@ -15,7 +15,7 @@ struct Particle
 
 static constexpr int MAX_PARTICLES = 60;
 
-void spawnParticle(Vector2 center, std::vector<Particle> &container, float uiScale)
+/*void spawnParticle(Vector2 center, std::vector<Particle> &container, float uiScale)
 {
     if (container.size() >= MAX_PARTICLES)
         return;
@@ -74,4 +74,4 @@ void drawParticles(const std::vector<Particle> &particles,
         DrawCircleV(p.pos, 2 * size, Fade(c2, alpha));
         DrawCircleV(p.pos, 1 * size, Fade(c3, alpha));
     }
-}
+}*/
