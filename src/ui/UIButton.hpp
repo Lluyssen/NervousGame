@@ -69,7 +69,6 @@ public:
     bool finishEnter(void)
     {
         _entered = true;
-        drawDefault();
         return true;
     }
 

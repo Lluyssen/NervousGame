@@ -6,7 +6,7 @@
 #include <ui/animation/BulleAnimation.hpp>
 #include <core/GameContext.hpp>
 
-class LiquidDecorationSystem : public engine::ISystem
+class LiquidDecorationSystem
 {
 private:
     std::array<AnimatedSprite, 4> _liquid;
@@ -18,7 +18,6 @@ private:
                                  {0.784375f, 0.728704f}}};
 
     std::array<Vector2, 4> _screenPos{};
-
     std::array<float, 4> _scale{1.f, .8f, .6f, .8f};
 
     float _uiScale = 1.f;
@@ -29,7 +28,7 @@ public:
         _uiScale = uiScale;
     }
 
-    void init(GameContext &ctx) override
+    void init(GameContext &ctx)
     {
         for (auto &b : _bubbles)
             b.reserve(128);
@@ -37,36 +36,38 @@ public:
         for (size_t i = 0; i < _liquid.size(); i++)
         {
             _liquid[i].setScale(.75f * _scale[i] * _uiScale);
-
-            _liquid[i].loadAtlas(
-                ctx,
-                "../assets/ui/levelSelect/liquidSprite.png",
-                "../assets/ui/levelSelect/liquidSprite.json",
-                0.15f);
-
+            _liquid[i].loadAtlas(ctx, "../assets/ui/levelSelect/liquidSprite.png", "../assets/ui/levelSelect/liquidSprite.json", 0.15f);
             _liquid[i].setPos(_pos[i]);
         }
 
-        onResize(GetScreenWidth(), GetScreenHeight());
+        onResize(ctx, GetScreenWidth(), GetScreenHeight());
     }
 
-    void update(GameContext &, float dt) override
+    void unload(void)
+    {
+        for (auto &l : _liquid)
+            l.unload();
+    }
+
+    void update(GameContext &, float dt)
     {
         for (auto &l : _liquid)
             l.update(dt);
 
         for (size_t i = 0; i < _bubbles.size(); i++)
         {
-            _bubbles[i].setPos(_screenPos[i]);
+            auto &b = _bubbles[i];
+
+            b.setPos(_screenPos[i]);
 
             if (GetRandomValue(0, 20) == 0)
-                _bubbles[i].spawn();
+                b.spawn();
 
-            _bubbles[i].update(dt);
+            b.update(dt);
         }
     }
 
-    void draw(GameContext &) override
+    void draw(GameContext &)
     {
         for (size_t i = 0; i < _liquid.size(); i++)
             _liquid[i].draw(_screenPos[i]);
@@ -75,20 +76,12 @@ public:
             b.draw(GREEN, LIME);
     }
 
-    void unload() override
-    {
-        for (auto &l : _liquid)
-            l.unload();
-    }
-
-    void onResize(int w, int h)
+    void onResize(GameContext &, int w, int h)
     {
         for (size_t i = 0; i < _pos.size(); i++)
             _screenPos[i] = utils::normalizedToScreen(_pos[i], w, h);
     }
 
-    int renderOrder(void) const override
-    {
-        return 15;
-    }
+    int updateOrder(void) const { return 0; }
+    int renderOrder(void) const { return 15; }
 };

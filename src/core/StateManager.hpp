@@ -22,10 +22,10 @@ public:
     virtual void render(StateManager &) {}
 
     // Permet de laisser les états en dessous s'update
-    virtual bool allowUpdateBelow() const { return false; }
+virtual bool allowUpdateBelow(void)const {return false; }
 
     // Permet de laisser les états en dessous se rendre
-    virtual bool allowRenderBelow() const { return false; }
+virtual bool allowRenderBelow(void)const {return false; }
 };
 
 // Gestionnaire de stack d'états (Menu, Game, Pause...)

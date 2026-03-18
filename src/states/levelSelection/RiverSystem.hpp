@@ -5,8 +5,9 @@
 #include <core/Utils.hpp>
 #include <array>
 #include <core/SystemManager.hpp>
+#include "raylib.h"
 
-class RiverSystem : public engine::ISystem
+class RiverSystem
 {
 private:
     struct RiverParticle
@@ -44,24 +45,28 @@ public:
         _path = path;
     }
 
-    void init(GameContext &ctx) override
+    void init(GameContext &ctx)
     {
+        _particles.clear();
         _particles.reserve(MAX_PARTICLES);
 
-        //onResize(ctx.getWidth(), ctx.getHeight());
-        onResize(GetScreenWidth(), GetScreenHeight());
+        onResize(ctx, GetScreenWidth(), GetScreenHeight());
     }
 
-    void update(GameContext &ctx, float dt) override
+    void unload(void) {}
+
+    void update(GameContext &, float dt)
     {
         _spawnTimer += dt;
 
+        // spawn rate fixe
         while (_spawnTimer > 0.02f)
         {
             spawn();
             _spawnTimer -= 0.02f;
         }
 
+        // update particles
         for (size_t i = 0; i < _particles.size();)
         {
             auto &p = _particles[i];
@@ -69,6 +74,7 @@ public:
             p.t += p.speed * dt;
             p.life += dt;
 
+            // segment suivant
             if (p.t > 1.f)
             {
                 p.t = 0.f;
@@ -76,26 +82,25 @@ public:
 
                 if (p.segment >= (int)_segments.size())
                 {
-                    _particles[i] = _particles.back();
-                    _particles.pop_back();
+                    remove(i);
                     continue;
                 }
             }
 
+            // mort
             if (p.life > p.maxLife)
             {
-                _particles[i] = _particles.back();
-                _particles.pop_back();
+                remove(i);
                 continue;
             }
 
-            i++;
+            ++i;
         }
     }
 
-    void draw(GameContext &) override
+    void draw(GameContext &)
     {
-        for (auto &p : _particles)
+        for (const auto &p : _particles)
         {
             Vector2 pos = computePosition(p);
 
@@ -105,37 +110,16 @@ public:
         }
     }
 
-    int renderOrder(void) const override
+    void onResize(GameContext &, int w, int h)
     {
-        return 5;
+        computeSegments(w, h);
     }
 
-    void onResize(int w, int h)
-    {
-        for (size_t i = 0; i < _path.size(); i++)
-            _screenPath[i] = utils::normalizedToScreen(_path[i], w, h);
-
-        for (size_t i = 0; i < _segments.size(); i++)
-        {
-            Vector2 a = _screenPath[i];
-            Vector2 b = _screenPath[i + 1];
-            Vector2 dir{ b.x - a.x, b.y - a.y};
-
-            float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
-
-            if (len > 0.0001f)
-            {
-                dir.x /= len;
-                dir.y /= len;
-            }
-
-            Vector2 normal{ -dir.y, dir.x};
-            _segments[i] = {a, b, normal, len};
-        }
-    }
+    int updateOrder(void) const { return 0; }
+    int renderOrder(void) const { return 5; }
 
 private:
-    void spawn()
+    void spawn(void)
     {
         if (_particles.size() >= MAX_PARTICLES)
             return;
@@ -152,11 +136,46 @@ private:
         _particles.push_back(p);
     }
 
-    Vector2 computePosition(const RiverParticle &p)
+    void remove(size_t i)
+    {
+        _particles[i] = _particles.back();
+        _particles.pop_back();
+    }
+
+    void computeSegments(int w, int h)
+    {
+        for (size_t i = 0; i < _path.size(); ++i)
+            _screenPath[i] = utils::normalizedToScreen(_path[i], w, h);
+
+        for (size_t i = 0; i < _segments.size(); ++i)
+        {
+            Vector2 a = _screenPath[i];
+            Vector2 b = _screenPath[i + 1];
+
+            Vector2 dir{b.x - a.x, b.y - a.y};
+
+            float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+
+            if (len > 0.0001f)
+            {
+                dir.x /= len;
+                dir.y /= len;
+            }
+
+            Vector2 normal{-dir.y, dir.x};
+
+            _segments[i] = {a, b, normal, len};
+        }
+    }
+
+    Vector2 computePosition(const RiverParticle &p) const
     {
         const RiverSegment &s = _segments[p.segment];
 
-        Vector2 pos{ s.a.x + (s.b.x - s.a.x) * p.t, s.a.y + (s.b.y - s.a.y) * p.t};
+        Vector2 pos{
+            s.a.x + (s.b.x - s.a.x) * p.t,
+            s.a.y + (s.b.y - s.a.y) * p.t};
+
         pos.x += s.normal.x * p.offset;
         pos.y += s.normal.y * p.offset;
 

@@ -7,7 +7,7 @@ class UIAnimation
 public:
     virtual ~UIAnimation() = default;
 
-    virtual void reset() {}
+virtual void reset(void) {}
 
     virtual void update(class UIButton&, float) {}
 

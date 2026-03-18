@@ -20,7 +20,7 @@ private:
 
 public:
     // Réinitialise l’animation pour recommencer.
-    void reset() override
+void reset(void) override
     {
         _timer = 0.0f;
     }

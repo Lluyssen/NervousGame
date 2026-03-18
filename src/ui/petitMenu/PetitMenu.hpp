@@ -5,6 +5,7 @@
 #include <string>
 #include <algorithm>
 #include <ui/animation/UITextureAnimation.hpp>
+#include <math.h>
 
 // Petit menu UI affichant une bannière avec texte.
 // L'animation de la texture est externalisée via UITextureAnimation.

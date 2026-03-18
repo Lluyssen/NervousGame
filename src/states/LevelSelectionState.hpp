@@ -4,13 +4,13 @@
 #include "raylib.h"
 #include <states/MapState.hpp>
 #include <core/Utils.hpp>
-#include <states/game/RiverSystem.hpp>
-#include <states/game/FogSystem.hpp>
-#include <states/game/Maprenderer.hpp>
-#include <states/game/LevelNodeSystem.hpp>
-#include <states/game/AmbientParticleSystem.hpp>
-#include <states/game/LiquidDecorationSystem.hpp>
-#include <states/game/TooltipSystem.hpp>
+#include <states/levelSelection/RiverSystem.hpp>
+#include <states/levelSelection/FogSystem.hpp>
+#include <states/levelSelection/Maprenderer.hpp>
+#include <states/levelSelection/LevelNodeSystem.hpp>
+#include <states/levelSelection/AmbientParticleSystem.hpp>
+#include <states/levelSelection/LiquidDecorationSystem.hpp>
+#include <states/levelSelection/TooltipSystem.hpp>
 #include <core/SystemManager.hpp>
 
 // Niveaux définis en coordonnées normalisées (0..1)
@@ -51,8 +51,8 @@ public:
     {
         auto &ctx = sm.getContext();
 
-        int w = GetScreenWidth();
-        int h = GetScreenHeight();
+        const int w = GetScreenWidth();
+        const int h = GetScreenHeight();
 
         _prevW = w;
         _prevH = h;
@@ -60,14 +60,11 @@ public:
         _uiScale = std::min((float)w / 1920.f, (float)h / 1080.f);
 
         _map.load();
-
         _fog.setTexture("../assets/ui/levelSelect/fog.png");
-
         _river.setup(RIVER_POS);
-
         _nodes.setup(sm, _tooltip, _ambient, LEVELS, _uiScale);
 
-        _liquid.setup(_uiScale);
+        _systems.clear();
 
         _systems.add(_tooltip);
         _systems.add(_fog);
@@ -77,26 +74,19 @@ public:
         _systems.add(_ambient);
 
         _systems.init(ctx);
-
-        _river.onResize(w, h);
-        _nodes.onResize(w, h);
-        _liquid.onResize(w, h);
+        _systems.resize(ctx, w, h);
     }
 
     void update(StateManager &sm, float dt) override
     {
         auto &ctx = sm.getContext();
 
-        // int w = ctx.getWidth();
-        // int h = ctx.getHeight();
-        int w = GetScreenWidth();
-        int h = GetScreenHeight();
+        const int w = GetScreenWidth();
+        const int h = GetScreenHeight();
 
         if (w != _prevW || h != _prevH)
         {
-            _river.onResize(w, h);
-            _nodes.onResize(w, h);
-            _liquid.onResize(w, h);
+            _systems.resize(ctx, w, h);
 
             _prevW = w;
             _prevH = h;
@@ -111,8 +101,8 @@ public:
     {
         auto &ctx = sm.getContext();
 
-        int h = GetScreenHeight();
-        int w = GetScreenWidth();
+        const int w = GetScreenWidth();
+        const int h = GetScreenHeight();
 
         ClearBackground(BLACK);
 
@@ -124,7 +114,6 @@ public:
     void onExit(StateManager &) override
     {
         _systems.unload();
-
         _map.unload();
     }
 };

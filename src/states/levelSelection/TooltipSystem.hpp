@@ -8,7 +8,7 @@
 #include <ui/animation/PixelRevealTextureAnimation.hpp>
 #include <core/Utils.hpp>
 
-class TooltipSystem : public engine::ISystem
+class TooltipSystem
 {
 private:
     PetitMenu _tooltip;
@@ -22,7 +22,7 @@ private:
     bool _visible = false;
 
 public:
-    void init(GameContext &) override
+    void init(GameContext &)
     {
         _lines.reserve(4);
 
@@ -35,36 +35,30 @@ public:
         _tooltip.init(_bannerTexture, _openSound);
     }
 
-    void update(GameContext &, float dt) override
-    {
-        _tooltip.update(dt);
-    }
-
-    void draw(GameContext &ctx) override
-    {
-        //_tooltip.draw(ctx.getWidth(), ctx.getHeight());
-        _tooltip.draw(GetScreenWidth(), GetScreenHeight());
-    }
-
-    void unload(void) override
+    void unload(void)
     {
         utils::safeUnload(_bannerTexture);
         UnloadSound(_openSound);
     }
 
-    int renderOrder(void) const override
+    void update(GameContext &, float dt)
     {
-        return 100;
+        _tooltip.update(dt);
     }
+
+    void draw(GameContext &)
+    {
+        _tooltip.draw(GetScreenWidth(), GetScreenHeight());
+    }
+
+    void onResize(GameContext &, int, int) {}
+
+    int updateOrder(void) const { return 0; }
+    int renderOrder(void) const { return 100; }
 
     void showLevel(const LevelNode &node, Vector2 pos, int w, int h)
     {
-        std::string title = "Level " + std::to_string(node.id() + 1);
-
-        _lines.clear();
-        _lines.emplace_back(title);
-        _lines.emplace_back("Difficulty: Easy");
-        _lines.emplace_back("Reward: 200 gold");
+        buildLevelText(node);
 
         pos.y -= 60.f;
 
@@ -76,12 +70,22 @@ public:
         _visible = true;
     }
 
-    void hide(void)
+    void hide()
     {
-        if (_visible)
-        {
-            _tooltip.hide();
-            _visible = false;
-        }
+        if (!_visible)
+            return;
+
+        _tooltip.hide();
+        _visible = false;
+    }
+
+private:
+    void buildLevelText(const LevelNode &node)
+    {
+        _lines.clear();
+
+        _lines.emplace_back("Level " + std::to_string(node.id() + 1));
+        _lines.emplace_back("Difficulty: Easy");
+        _lines.emplace_back("Reward: 200 gold");
     }
 };

@@ -2,7 +2,6 @@
 #define _LEVEL_ONE_STATE_H_
 
 #include "raylib.h"
-#include "../game/LevelNode.hpp"
 #include "../../ui/petitMenu/PetitMenu.hpp"
 #include "../PauseMenuState.hpp"
 #include "../MapState.hpp"

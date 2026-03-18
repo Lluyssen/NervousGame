@@ -4,7 +4,6 @@
 #include <ui/AnimatedSprite.hpp>
 #include <math.h>
 
-class GameContext;
 class LevelNode
 {
 private:

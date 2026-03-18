@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include <vector>
 #include <math.h>
+#include <core/SystemManager.hpp>
 
 // Composant pour une étoile
 struct StarData
@@ -30,22 +31,39 @@ class StarfieldSystem : public SystemTypeList<StarComponents>
 private:
     int screenWidth;
     int screenHeight;
+    Registry<StarComponents> *_registry = nullptr;
 
 public:
-    StarfieldSystem(int w, int h) : screenWidth(w), screenHeight(h) {}
+    StarfieldSystem(int w, int h)
+        : screenWidth(w), screenHeight(h) {}
 
-    void update(double dt, Registry<StarComponents> &reg) override
+    void setRegistry(Registry<StarComponents> &reg)
     {
-        // Mise à jour de position et phase
-        reg.template forEachEntityWith<StarComponents>([&](Entity, Position &pos, Velocity &vel, StarData &s) {
-            s.phase += dt * 2.0f;
-            pos.x += vel.vx * dt;
-            pos.y += vel.vy * dt;
+        _registry = &reg;
+    }
 
-            if (pos.x < 0) pos.x += screenWidth;
-            if (pos.x > screenWidth) pos.x -= screenWidth;
-            if (pos.y < 0) pos.y += screenHeight;
-            if (pos.y > screenHeight) pos.y -= screenHeight; });
+    // -------------------------
+    // LOGIQUE ECS PURE
+    // -------------------------
+    void update(double dt, Registry<StarComponents> &reg)
+    {
+        reg.template forEachEntityWith<StarComponents>(
+            [&](Entity, Position &pos, Velocity &vel, StarData &s)
+            {
+                s.phase += dt * 2.0f;
+
+                pos.x += vel.vx * dt;
+                pos.y += vel.vy * dt;
+
+                if (pos.x < 0)
+                    pos.x += screenWidth;
+                if (pos.x > screenWidth)
+                    pos.x -= screenWidth;
+                if (pos.y < 0)
+                    pos.y += screenHeight;
+                if (pos.y > screenHeight)
+                    pos.y -= screenHeight;
+            });
     }
 
     void draw(Registry<StarComponents> &reg)
@@ -54,17 +72,70 @@ public:
         float nx = (mouse.x / screenWidth) - 0.5f;
         float ny = (mouse.y / screenHeight) - 0.5f;
 
-        reg.template forEachEntityWith<StarComponents>([&](Entity, Position &pos, Velocity &, StarData &s) {
-            float twinkle = (sinf(s.phase * 3.0f) + 1.0f) * 0.5f;
-            float brightness = 160 + twinkle * 80;
+        reg.template forEachEntityWith<StarComponents>(
+            [&](Entity, Position &pos, Velocity &, StarData &s)
+            {
+                float twinkle = (sinf(s.phase * 3.0f) + 1.0f) * 0.5f;
+                float brightness = 160 + twinkle * 80;
 
-            Color c{(unsigned char)brightness, (unsigned char)brightness, (unsigned char)(brightness + 20), 255};
-            float size = s.size + twinkle * 0.4f;
+                Color c{
+                    (unsigned char)brightness,
+                    (unsigned char)brightness,
+                    (unsigned char)(brightness + 20),
+                    255};
 
-            DrawCircleV({pos.x + nx * 30, pos.y + ny * 30}, size, c); });
+                float size = s.size + twinkle * 0.4f;
+
+                DrawCircleV(
+                    {pos.x + nx * 30, pos.y + ny * 30},
+                    size,
+                    c);
+            });
     }
 
-    const char *name() const override { return "StarfieldSystem"; }
+    // -------------------------
+    // INTERFACE SystemManager
+    // -------------------------
+    void init(GameContext &) {}
+
+    void update(GameContext &, float dt)
+    {
+        if (!_registry)
+            return;
+
+        update(static_cast<double>(dt), *_registry);
+    }
+
+    void draw(GameContext &)
+    {
+        if (!_registry)
+            return;
+
+        draw(*_registry);
+    }
+
+    void onResize(GameContext &, int w, int h)
+    {
+        screenWidth = w;
+        screenHeight = h;
+    }
+
+void unload(void) {}
+
+int updateOrder(void) const
+    {
+        return 0;
+    }
+
+int renderOrder(void) const
+    {
+        return -100;
+    }
+
+    const char *name() const
+    {
+        return "StarfieldSystem";
+    }
 };
 
 // Fonction utilitaire pour créer un champ d’étoiles

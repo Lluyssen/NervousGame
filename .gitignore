@@ -2,3 +2,4 @@
 ecs
 main.cpp
 LevelOneState.*
+.gitignore

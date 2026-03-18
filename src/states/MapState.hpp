@@ -44,15 +44,8 @@ public:
 
         ClearBackground(BLACK);
 
-        Rectangle src{
-            0, 0,
-            (float)_background.width,
-            (float)_background.height};
-
-        Rectangle dst{
-            0, 0,
-            (float)w,
-            (float)h};
+        Rectangle src{0, 0, (float)_background.width, (float)_background.height};
+        Rectangle dst{0, 0, (float)w, (float)h};
 
         DrawTexturePro(_background, src, dst, {0, 0}, 0, WHITE);
     }

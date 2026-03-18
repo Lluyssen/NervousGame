@@ -5,7 +5,7 @@
 #include <vector>
 #include <ui/animation/Particles.hpp>
 
-class AmbientParticleSystem : public engine::ISystem
+class AmbientParticleSystem
 {
 private:
     static constexpr size_t MAX_PARTICLES = 256;
@@ -17,27 +17,36 @@ private:
     size_t _redCount = 0;
 
 public:
-    AmbientParticleSystem(void) = default;
+    AmbientParticleSystem() = default;
 
-    void init(GameContext &) override
+    void init(GameContext &)
     {
         _goldCount = 0;
         _redCount = 0;
     }
 
-    void update(GameContext &, float dt) override
+    void update(GameContext &, float dt)
     {
         updateParticles(_goldParticles, _goldCount, dt);
         updateParticles(_redParticles, _redCount, dt);
     }
 
-    void draw(GameContext &) override
+    void draw(GameContext &)
     {
         drawParticles(_goldParticles, _goldCount, GOLD, YELLOW, WHITE);
         drawParticles(_redParticles, _redCount, MAROON, RED, ORANGE);
     }
 
-    int renderOrder(void) const override
+    void onResize(GameContext &, int, int) {}
+
+    void unload(void) {}
+
+    int updateOrder(void) const
+    {
+        return 0;
+    }
+
+    int renderOrder(void) const
     {
         return 20;
     }
@@ -95,7 +104,6 @@ private:
             float t = p.life / p.maxLife;
 
             Color color;
-
             if (t < 0.33f)
                 color = c1;
             else if (t < 0.66f)

@@ -8,7 +8,7 @@
 #include "TooltipSystem.hpp"
 #include "AmbientParticleSystem.hpp"
 
-class LevelNodeSystem : public engine::ISystem
+class LevelNodeSystem
 {
 private:
     std::vector<LevelNode> _levels;
@@ -42,28 +42,32 @@ public:
         _screenPos.resize(_levels.size());
     }
 
-    void init(GameContext &ctx) override
+    void init(GameContext &ctx)
     {
         _whiteIdle.setScale(.75f * _uiScale);
-        _whiteIdle.loadAtlas(ctx, "../assets/ui/levelSelect/wIdle.png", "../assets/ui/levelSelect/wIdle.json", 0.15f);
+        _whiteIdle.loadAtlas(ctx, "../assets/ui/levelSelect/wIdle.png",
+                             "../assets/ui/levelSelect/wIdle.json", 0.15f);
 
         _redIdle.setScale(.75f * _uiScale);
-        _redIdle.loadAtlas(ctx, "../assets/ui/levelSelect/redIdle.png", "../assets/ui/levelSelect/redIdle.json", 0.15f);
+        _redIdle.loadAtlas(ctx, "../assets/ui/levelSelect/redIdle.png",
+                           "../assets/ui/levelSelect/redIdle.json", 0.15f);
 
         _ruinTexture = LoadTexture("../assets/ui/levelSelect/ruineTexture.png");
         _haloTexture = LoadTexture("../assets/ui/levelSelect/halo.png");
         _arrowTexture = LoadTexture("../assets/ui/levelSelect/Arrow.png");
-
-        //onResize(ctx.getWidth(), ctx.getHeight());
-        onResize(GetScreenWidth(), GetScreenHeight());
     }
 
-    void update(GameContext &ctx, float dt) override
+    void unload(void)
+    {
+        utils::safeUnload(_ruinTexture);
+        utils::safeUnload(_haloTexture);
+        utils::safeUnload(_arrowTexture);
+    }
+
+    void update(GameContext &ctx, float dt)
     {
         Vector2 mouse = GetMousePosition();
 
-        
-        
         int w = GetScreenWidth();
         int h = GetScreenHeight();
 
@@ -99,7 +103,6 @@ public:
             {
                 if (id == unlocked && GetRandomValue(0, 100) < 10)
                     _particles->spawnGold(pos, _uiScale);
-
                 else if (id > unlocked && GetRandomValue(0, 100) < 6)
                     _particles->spawnRed(pos, _uiScale);
             }
@@ -115,7 +118,7 @@ public:
         _redIdle.update(dt);
     }
 
-    void draw(GameContext &ctx) override
+    void draw(GameContext &ctx)
     {
         int unlocked = ctx.getHighestUnlockedLevel();
 
@@ -133,18 +136,14 @@ public:
         }
     }
 
-    void unload(void) override
-    {
-        utils::safeUnload(_ruinTexture);
-        utils::safeUnload(_haloTexture);
-        utils::safeUnload(_arrowTexture);
-    }
-
-    void onResize(int w, int h)
+    void onResize(GameContext &, int w, int h)
     {
         for (size_t i = 0; i < _levels.size(); i++)
             _screenPos[i] = _levels[i].getScreenPos(w, h);
     }
+
+    int updateOrder(void) const { return 0; }
+    int renderOrder(void) const { return 0; }
 
 private:
     void drawActive(Vector2 pos, float pulse)
@@ -166,7 +165,11 @@ private:
 
     void drawLocked(Vector2 pos, float scale)
     {
-        DrawTextureEx(_ruinTexture, {pos.x - (_ruinTexture.width * scale) * 0.5f, pos.y - (_ruinTexture.height * scale) * 0.5f - 50.f * _uiScale}, 0, scale, WHITE);
+        DrawTextureEx(_ruinTexture,
+                      {pos.x - (_ruinTexture.width * scale) * 0.5f,
+                       pos.y - (_ruinTexture.height * scale) * 0.5f - 50.f * _uiScale},
+                      0, scale, WHITE);
+
         _redIdle.draw(pos);
     }
 

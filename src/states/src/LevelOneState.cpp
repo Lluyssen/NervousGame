@@ -1,4 +1,4 @@
-#include "../include/LevelOneState.h"
+#include <states/include/LevelOneState.h>
 
 LevelOneState::LevelOneState()
 {

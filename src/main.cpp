@@ -7,7 +7,7 @@
 #include <states/LevelSelectionState.hpp>
 #include <iostream>
 
-const bool START_IN_SANDBOX = true;
+const bool START_IN_SANDBOX = false;
 
 int main(void)
 {

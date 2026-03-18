@@ -7,21 +7,20 @@
 #include <ui/animation/ScaleHoverAnimation.hpp>
 #include <ui/animation/PixelRevealAnimation.hpp>
 #include <ui/PixelButton.hpp>
+#include <core/SystemManager.hpp>
 
 // Gère la création, l’animation et l’interaction des boutons du menu principal.
-class MenuButtons
+class MenuButtonsSystem
 {
 private:
-    // Liste des boutons du menu (polymorphisme possible : PixelButton, etc.)
     std::vector<std::unique_ptr<UIButton>> _buttons;
     int spacing = 150;
 
+    int _lastAction = -1;
+
 public:
-    // Initialise les boutons et leurs animations
     void init(GameContext &ctx)
     {
-        
-        
         int w = GetScreenWidth();
         int h = GetScreenHeight();
 
@@ -32,20 +31,17 @@ public:
         _buttons.clear();
         _buttons.reserve(3);
 
-        _buttons.push_back(
-            std::make_unique<PixelButton>(
-                "Game",
-                Rectangle{(float)(w / 2 - bw / 2), (float)startY, (float)bw, (float)bh}));
+        _buttons.push_back(std::make_unique<PixelButton>(
+            "Game",
+            Rectangle{(float)(w / 2 - bw / 2), (float)startY, (float)bw, (float)bh}));
 
-        _buttons.push_back(
-            std::make_unique<PixelButton>(
-                "Settings",
-                Rectangle{(float)(w / 2 - bw / 2), (float)(startY + spacing), (float)bw, (float)bh}));
+        _buttons.push_back(std::make_unique<PixelButton>(
+            "Settings",
+            Rectangle{(float)(w / 2 - bw / 2), (float)(startY + spacing), (float)bw, (float)bh}));
 
-        _buttons.push_back(
-            std::make_unique<PixelButton>(
-                "Quit",
-                Rectangle{(float)(w / 2 - bw / 2), (float)(startY + spacing * 2), (float)bw, (float)bh}));
+        _buttons.push_back(std::make_unique<PixelButton>(
+            "Quit",
+            Rectangle{(float)(w / 2 - bw / 2), (float)(startY + spacing * 2), (float)bw, (float)bh}));
 
         for (auto &b : _buttons)
         {
@@ -54,32 +50,11 @@ public:
         }
     }
 
-    // Reset toutes les animations d'entrée
-    void resetAnimations()
-    {
-        for (auto &b : _buttons)
-            b->resetAnimations();
-    }
-
-    // Vérifie si toutes les animations d'entrée sont terminées
-    bool enterFinished()
-    {
-        for (auto &b : _buttons)
-            if (!b->enterFinished())
-                return false;
-
-        return true;
-    }
-
-    // Mise à jour des boutons
-    // Retourne l'index du bouton cliqué ou -1
     int update(float dt)
     {
         Vector2 mouse = GetMousePosition();
-
         int hovered = -1;
 
-        // Détecte quel bouton est survolé
         for (size_t i = 0; i < _buttons.size(); ++i)
         {
             if (CheckCollisionPointRec(mouse, _buttons[i]->baseRect()))
@@ -89,7 +64,6 @@ public:
             }
         }
 
-        // Met à jour les boutons
         for (size_t i = 0; i < _buttons.size(); ++i)
         {
             bool someoneHover = (hovered != -1 && hovered != (int)i);
@@ -101,20 +75,61 @@ public:
         return -1;
     }
 
-    // Dessin des boutons
     void draw(void)
     {
         for (auto &b : _buttons)
             b->draw();
     }
 
-    // Accès direct (optionnel)
+    void update(GameContext &, float dt)
+    {
+        _lastAction = update(dt);
+    }
+
+    void draw(GameContext &)
+    {
+        draw();
+    }
+
+    void onResize(GameContext &, int, int)
+    {
+        // Optionnel recalculer les positions
+    }
+
+    void unload(void) {}
+
+    int updateOrder(void) const { return 0; }
+
+    int renderOrder(void) const { return 100; }
+
+    void resetAnimations(void)
+    {
+        for (auto &b : _buttons)
+            b->resetAnimations();
+    }
+
+    bool enterFinished(void)
+    {
+        for (auto &b : _buttons)
+            if (!b->enterFinished())
+                return false;
+
+        return true;
+    }
+
+    int consumeAction(void)
+    {
+        int a = _lastAction;
+        _lastAction = -1;
+        return a;
+    }
+
     UIButton &operator[](size_t i)
     {
         return *_buttons[i];
     }
 
-    size_t size() const
+    size_t size(void) const
     {
         return _buttons.size();
     }

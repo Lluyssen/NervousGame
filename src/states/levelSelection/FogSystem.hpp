@@ -4,7 +4,7 @@
 #include <math.h>
 #include <core/SystemManager.hpp>
 
-class FogSystem : public engine::ISystem
+class FogSystem
 {
 private:
     Texture2D texture{};
@@ -26,7 +26,7 @@ public:
         _path = path;
     }
 
-    void init(GameContext &) override
+    void init(GameContext &)
     {
         if (!_path)
             return;
@@ -37,7 +37,7 @@ public:
         texH = texture.height * SCALE;
     }
 
-    void unload(void) override
+    void unload(void)
     {
         if (texture.id)
         {
@@ -46,7 +46,7 @@ public:
         }
     }
 
-    void update(GameContext &, float dt) override
+    void update(GameContext &, float dt)
     {
         offsetX += dt * SPEED_X;
         offsetY += dt * SPEED_Y;
@@ -55,13 +55,11 @@ public:
         offsetY = fmod(offsetY, texH);
     }
 
-    void draw(GameContext &ctx) override
+    void draw(GameContext &)
     {
         if (!texture.id)
             return;
 
-        
-        
         int w = GetScreenWidth();
         int h = GetScreenHeight();
 
@@ -72,5 +70,15 @@ public:
         }
     }
 
-    int renderOrder(void) const override { return 10; }
+    void onResize(GameContext &, int, int) {}
+
+    int updateOrder(void) const
+    {
+        return 0;
+    }
+
+    int renderOrder(void) const
+    {
+        return 10;
+    }
 };

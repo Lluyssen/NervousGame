@@ -2,31 +2,27 @@
 
 #include "raylib.h"
 #include <string>
+#include <core/SystemManager.hpp>
 
 // Gère l'affichage d'un PNJ avec texte après un certain temps d'inactivité.
-class MenuNPC
+class MenuNPCSystem
 {
 private:
-    // Texture représentant le PNJ.
     Texture2D _npc;
 
-    // Compteur de temps écoulé pour déclencher l'apparition.
     float _idleTimer = 0.0f;
-
-    // Indique si le PNJ est visible à l'écran.
     bool _visible = false;
 
-    // Texte affiché dans la bulle du PNJ.
     std::string _text = "La Chine c'était mieux";
 
+    int _h = 0;
+
 public:
-    // Charge la texture du PNJ.
-    void init(void)
+    void init(GameContext &)
     {
         _npc = LoadTexture("../assets/ui/guigui.png");
     }
 
-    // Met à jour le timer et rend le PNJ visible après 15 secondes.
     void update(float dt)
     {
         _idleTimer += dt;
@@ -35,7 +31,6 @@ public:
             _visible = true;
     }
 
-    // Dessine le PNJ et sa bulle de texte si visible.
     void draw(int h)
     {
         if (!_visible)
@@ -46,14 +41,34 @@ public:
 
         DrawTexture(_npc, px, py, WHITE);
 
-        Rectangle bubble{
-            (float)px + 80,
-            (float)py - 80,
-            300,
-            70};
+        Rectangle bubble{(float)px + 80, (float)py - 80, 300, 70};
 
         DrawRectangleRounded(bubble, 0.4f, 8, Color{255, 255, 255, 230});
         DrawRectangleRoundedLinesEx(bubble, 0.4f, 8, 2, BLACK);
         DrawText(_text.c_str(), bubble.x + 10, bubble.y + 20, 20, BLACK);
     }
+
+    void update(GameContext &, float dt)
+    {
+        update(dt);
+    }
+
+    void draw(GameContext &)
+    {
+        draw(_h);
+    }
+
+    void onResize(GameContext &, int, int h)
+    {
+        _h = h;
+    }
+
+    void unload(void)
+    {
+        UnloadTexture(_npc);
+    }
+
+    int updateOrder(void) const { return 0; }
+
+    int renderOrder(void) const { return 50; }
 };

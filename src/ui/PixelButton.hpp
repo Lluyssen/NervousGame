@@ -73,7 +73,7 @@ private:
 
 public:
 
-    void drawDefault() override
+void drawDefault(void) override
     {
         UIButton::drawDefault();
 

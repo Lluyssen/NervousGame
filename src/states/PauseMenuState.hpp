@@ -21,8 +21,8 @@ private:
     static constexpr int BUTTON_SPACING = 80;
 
 public:
-    bool allowRenderBelow() const override { return true; } // On voit le jeu derrière
-    bool allowUpdateBelow() const override { return false; }
+bool allowRenderBelow(void)const override { return true; } // On voit le jeu derrière
+bool allowUpdateBelow(void)const override { return false; }
 
     void onEnter(StateManager &sm) override
     {
