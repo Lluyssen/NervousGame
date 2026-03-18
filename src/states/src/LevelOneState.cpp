@@ -1,4 +1,4 @@
-#include <states/include/LevelOneState.h>
+#include "../include/LevelOneState.h"
 
 LevelOneState::LevelOneState()
 {
@@ -38,7 +38,7 @@ LevelOneState::~LevelOneState()
     _bIsArcherTowerDisplayed = false;
 }
 
-void LevelOneState::onEnter(StateManager& rStateManager)
+void LevelOneState::onEnter(StateManager &sm)
 {
     Vector2 ballPosition = { -100.0f, -100.0f };
 
@@ -167,7 +167,7 @@ void LevelOneState::drawArcherTower()
     DrawTexturePro(_archerTowerTexture, origin, dest, {static_cast<float>(_archerTowerTexture.width)/2.0f, static_cast<float>(_archerTowerTexture.height)/2.2f}, 0.0f, WHITE);
 }
 
-void LevelOneState::update(StateManager& rStateManager, float dt)
+void LevelOneState::update(StateManager &, float dt)
 {
     // draw background map
     Rectangle dest = { 0, 0, 1280, 800 };
@@ -217,12 +217,4 @@ void LevelOneState::update(StateManager& rStateManager, float dt)
     EndDrawing();
 }
 
-void LevelOneState::render(StateManager& rStateManager)
-{
-
-}
-
-void LevelOneState::onExit(StateManager& rStateManager)
-{
-
-}
+void LevelOneState::onExit(StateManager &) {};

@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "../../ui/petitMenu/PetitMenu.hpp"
 #include "../PauseMenuState.hpp"
+#include "../../core/SystemManager.hpp"
 #include "../MapState.hpp"
 
 class LevelOneState : public IGameState
@@ -12,10 +13,9 @@ class LevelOneState : public IGameState
 public:
     LevelOneState();
     ~LevelOneState();
-    void onEnter(StateManager& rStateManager) override;
-    void update(StateManager& rStateManager, float dt) override;
-    void render(StateManager& rStateManager) override;
-    void onExit(StateManager& rStateManager) override;
+    void onEnter(StateManager &sm) override;
+    void onExit(StateManager &) override;
+    void update(StateManager &, float) override;
 
 // # PRIVATE FUNCTIONS
 private:
