@@ -7,60 +7,41 @@
 #include "raylib.h"
 #include "MusicManager.hpp"
 
-/*
-    Contexte global partagé par tous les states.
-    Permet d'accéder aux ressources du jeu.
-*/
-
-#pragma once
-
-#include <string>
-#include <unordered_map>
-#include <stdexcept>
-
-#include "raylib.h"
-#include "MusicManager.hpp"
-
-// ---- LevelCompletion ----
 struct LevelCompletion
 {
     bool pending = false;
     int completedLevel = -1;
 };
 
-// ---- GameContext ----
 class GameContext
 {
 private:
-    // ---- Progression ----
     int _highestUnlockedLevel = 0;
     int _selectedLevel = -1;
     LevelCompletion _levelCompletion;
 
-    // ---- Resources ----
     std::unordered_map<std::string, Texture2D> _textures;
 
-    // ---- Audio ----
     MusicManager _music;
     bool _musicLoaded = false;
 
-    // ---- Constructor / Destructor ----
-public:
-    GameContext() = default;
+    bool _menuBackgroundLoaded = false;
 
-    ~GameContext()
+public:
+    GameContext(void) = default;
+
+    ~GameContext(void)
     {
         unloadAllTextures();
     }
 
-    // ---- Screen / Selection ----
-public:
-    void setSelectedLevel(int id) { _selectedLevel = id; }
-int getSelectedLevel(void)const {return _selectedLevel; }
+    void setBackGroundLoaded(bool bi) { _menuBackgroundLoaded = bi; }
+    bool getBackGroundLoaded(void) { return _menuBackgroundLoaded; }
 
-    // ---- Progression ----
-public:
-int getHighestUnlockedLevel(void) const
+    void setSelectedLevel(int id) { _selectedLevel = id; }
+    int getSelectedLevel(void) const { return _selectedLevel; }
+
+    int getHighestUnlockedLevel(void) const
     {
         return _highestUnlockedLevel;
     }
@@ -70,8 +51,6 @@ int getHighestUnlockedLevel(void) const
         _highestUnlockedLevel = level;
     }
 
-    // ---- Texture Management ----
-public:
     Texture2D &loadTexture(const std::string &path)
     {
         if (!IsWindowReady())
@@ -95,7 +74,7 @@ public:
         return loadTexture(path);
     }
 
-    void unloadAllTextures()
+    void unloadAllTextures(void)
     {
         for (auto &[_, tex] : _textures)
             UnloadTexture(tex);
@@ -103,8 +82,6 @@ public:
         _textures.clear();
     }
 
-    // ---- Music ----
-public:
     void initMusic(const std::string &path)
     {
         if (!_musicLoaded)
@@ -114,32 +91,21 @@ public:
         }
     }
 
-    void updateMusic()
+    void updateMusic(void)
     {
         if (_musicLoaded)
             _music.update();
     }
 
-    // ---- Level Completion ----
-public:
     void setLevelCompleted(int id)
     {
         _levelCompletion.pending = true;
         _levelCompletion.completedLevel = id;
     }
 
-bool hasPendingLevelCompletion(void) const
-    {
-        return _levelCompletion.pending;
-    }
+    bool hasPendingLevelCompletion(void) const { return _levelCompletion.pending; }
 
-int getCompletedLevel(void) const
-    {
-        return _levelCompletion.completedLevel;
-    }
+    int getCompletedLevel(void) const { return _levelCompletion.completedLevel; }
 
-    void clearLevelCompletion()
-    {
-        _levelCompletion.pending = false;
-    }
+    void clearLevelCompletion(void) { _levelCompletion.pending = false; }
 };

@@ -4,8 +4,9 @@
 #include <math.h>
 #include <vector>
 #include <ui/animation/Particles.hpp>
+#include <core/SystemManager.hpp>
 
-class AmbientParticleSystem
+class AmbientParticleSystem : public engine::System
 {
 private:
     static constexpr size_t MAX_PARTICLES = 256;
@@ -17,7 +18,7 @@ private:
     size_t _redCount = 0;
 
 public:
-    AmbientParticleSystem() = default;
+    AmbientParticleSystem(void) = default;
 
     void init(GameContext &)
     {

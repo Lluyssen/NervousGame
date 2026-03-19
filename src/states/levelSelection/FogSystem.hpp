@@ -4,7 +4,7 @@
 #include <math.h>
 #include <core/SystemManager.hpp>
 
-class FogSystem
+class FogSystem : public engine::System
 {
 private:
     Texture2D texture{};
@@ -71,14 +71,4 @@ public:
     }
 
     void onResize(GameContext &, int, int) {}
-
-    int updateOrder(void) const
-    {
-        return 0;
-    }
-
-    int renderOrder(void) const
-    {
-        return 10;
-    }
 };

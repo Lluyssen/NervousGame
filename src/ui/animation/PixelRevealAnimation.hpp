@@ -20,7 +20,7 @@ private:
 
 public:
     // Réinitialise l’animation pour recommencer.
-void reset(void) override
+    void reset(void) override
     {
         _timer = 0.0f;
     }
@@ -61,14 +61,9 @@ void reset(void) override
         int cols = r.width / _blockSize;
         int rows = r.height / _blockSize;
 
-        Vector2 center =
-            {
-                r.x + r.width * 0.5f,
-                r.y + r.height * 0.5f};
+        Vector2 center = {r.x + r.width * 0.5f, r.y + r.height * 0.5f};
 
-        float maxDist =
-            sqrtf((r.width * 0.5f) * (r.width * 0.5f) +
-                  (r.height * 0.5f) * (r.height * 0.5f));
+        float maxDist = sqrtf((r.width * 0.5f) * (r.width * 0.5f) + (r.height * 0.5f) * (r.height * 0.5f));
 
         float radius = r.height * 0.3f;
 

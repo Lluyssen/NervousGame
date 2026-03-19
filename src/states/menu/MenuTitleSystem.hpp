@@ -4,7 +4,7 @@
 #include <core/SystemManager.hpp>
 
 // Affiche le titre du menu avec un effet de glow et d’ombre.
-class MenuTitleSystem
+class MenuTitleSystem : public engine::System
 {
 private:
     int _w = 0;

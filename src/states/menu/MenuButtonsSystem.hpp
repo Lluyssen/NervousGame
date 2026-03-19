@@ -10,13 +10,14 @@
 #include <core/SystemManager.hpp>
 
 // Gère la création, l’animation et l’interaction des boutons du menu principal.
-class MenuButtonsSystem
+class MenuButtonsSystem : public engine::System
 {
 private:
     std::vector<std::unique_ptr<UIButton>> _buttons;
     int spacing = 150;
 
     int _lastAction = -1;
+    bool _enterStarted = false;
 
 public:
     void init(GameContext &ctx)
@@ -48,10 +49,16 @@ public:
             b->setEnterAnimation(std::make_unique<PixelRevealAnimation>());
             b->setHoverAnimation(std::make_unique<ScaleHoverAnimation>());
         }
+
+        _enterStarted = false;
+        _lastAction = -1;
     }
 
     int update(float dt)
     {
+        if (!_enterStarted)
+            return -1;
+
         Vector2 mouse = GetMousePosition();
         int hovered = -1;
 
@@ -93,7 +100,6 @@ public:
 
     void onResize(GameContext &, int, int)
     {
-        // Optionnel recalculer les positions
     }
 
     void unload(void) {}
@@ -106,6 +112,12 @@ public:
     {
         for (auto &b : _buttons)
             b->resetAnimations();
+    }
+
+    void startEnter(void)
+    {
+        _enterStarted = true;
+        resetAnimations();
     }
 
     bool enterFinished(void)

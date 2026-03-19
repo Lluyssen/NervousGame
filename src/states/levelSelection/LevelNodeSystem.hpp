@@ -7,8 +7,9 @@
 #include <core/StateManager.hpp>
 #include "TooltipSystem.hpp"
 #include "AmbientParticleSystem.hpp"
+#include <core/SystemManager.hpp>
 
-class LevelNodeSystem
+class LevelNodeSystem : public engine::System
 {
 private:
     std::vector<LevelNode> _levels;

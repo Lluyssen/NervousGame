@@ -67,13 +67,12 @@ public:
             b.pos.x += std::sin(b.life * 3.f + b.phase) * 20.f * dt;
         }
 
-        _bubbles.erase(
-            std::remove_if(_bubbles.begin(), _bubbles.end(),
-                           [](const Bubble &b)
-                           {
-                               return b.life >= b.maxLife;
-                           }),
-            _bubbles.end());
+        _bubbles.erase(std::remove_if(_bubbles.begin(), _bubbles.end(),
+                                      [](const Bubble &b)
+                                      {
+                                          return b.life >= b.maxLife;
+                                      }),
+                       _bubbles.end());
     }
 
     void draw(Color core = GREEN, Color glow = LIME)

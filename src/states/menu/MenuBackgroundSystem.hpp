@@ -5,32 +5,78 @@
 #include <core/SystemManager.hpp>
 
 // Gère le fond animé du menu avec un effet de parallaxe basé sur la souris.
-class MenuBackgroundSystem
+class MenuBackgroundSystem : public engine::System
 {
 private:
     AnimatedSprite _background;
     Vector2 _offset{0.f, 0.f};
-    bool _ready = false;
 
     int _w = 0;
     int _h = 0;
 
+    int _loaded = 0;
+    static constexpr int TOTAL = 41;
+
+    bool _ready = false;
+    bool _initialized = false;
+
+    std::string _basePath = "../assets/ui/bg/frame";
+
 public:
-    void loadFrame(GameContext &ctx, const std::string &basePath, int index)
+    bool isReady(void) const
     {
-        _background.loadFrame(ctx, basePath, index);
+        return _ready;
     }
 
-    void finalize()
+    float progress(void) const
     {
-        _background.finalize(0.1f);
-        _ready = true;
+        if (TOTAL == 0)
+            return 1.f;
+        return (float)_loaded / (float)TOTAL;
     }
 
-    void update(float dt)
+    void init(GameContext &ctx)
+    {
+        if (ctx.getBackGroundLoaded())
+        {
+            _loaded = TOTAL;
+
+            for (int i = 0; i < TOTAL; ++i)
+                _background.loadFrame(ctx, _basePath, i);
+
+            _background.finalize(0.1f);
+
+            _ready = true;
+            return;
+        }
+
+        _loaded = 0;
+        _ready = false;
+        _initialized = true;
+    }
+
+    void update(GameContext &ctx, float dt)
     {
         if (!_ready)
+        {
+            double start = GetTime();
+
+            while (_loaded < TOTAL)
+            {
+                _background.loadFrame(ctx, _basePath, _loaded++);
+                if (GetTime() - start > 0.002)
+                    break;
+            }
+
+            if (_loaded >= TOTAL)
+            {
+                _background.finalize(0.1f);
+                _ready = true;
+                ctx.setBackGroundLoaded(true);
+            }
+
             return;
+        }
 
         _background.update(dt);
 
@@ -45,24 +91,9 @@ public:
         _offset.y += (ny * strength - _offset.y) * 5.0f * dt;
     }
 
-    void draw(int w, int h)
-    {
-        if (!_ready)
-            return;
-
-        _background.drawFullscreen(w, h, _offset.x, _offset.y);
-    }
-
-    void init(GameContext &) {}
-
-    void update(GameContext &, float dt)
-    {
-        update(dt);
-    }
-
     void draw(GameContext &)
     {
-        draw(_w, _h);
+        _background.drawFullscreen(_w, _h, _offset.x, _offset.y);
     }
 
     void onResize(GameContext &, int w, int h)
@@ -73,13 +104,7 @@ public:
 
     void unload(void) {}
 
-    int updateOrder(void) const
-    {
-        return 0;
-    }
+    int updateOrder(void) const { return 0; }
 
-    int renderOrder(void) const
-    {
-        return -200;
-    }
+    int renderOrder(void) const { return -200; }
 };

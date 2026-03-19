@@ -7,8 +7,9 @@
 #include <ui/petitMenu/PetitMenu.hpp>
 #include <ui/animation/PixelRevealTextureAnimation.hpp>
 #include <core/Utils.hpp>
+#include <core/SystemManager.hpp>
 
-class TooltipSystem
+class TooltipSystem : public engine::System
 {
 private:
     PetitMenu _tooltip;
@@ -20,6 +21,15 @@ private:
     std::vector<std::string> _lines;
 
     bool _visible = false;
+
+    void buildLevelText(const LevelNode &node)
+    {
+        _lines.clear();
+
+        _lines.emplace_back("Level " + std::to_string(node.id() + 1));
+        _lines.emplace_back("Difficulty: Easy");
+        _lines.emplace_back("Reward: 200 gold");
+    }
 
 public:
     void init(GameContext &)
@@ -70,22 +80,12 @@ public:
         _visible = true;
     }
 
-    void hide()
+    void hide(void)
     {
         if (!_visible)
             return;
 
         _tooltip.hide();
         _visible = false;
-    }
-
-private:
-    void buildLevelText(const LevelNode &node)
-    {
-        _lines.clear();
-
-        _lines.emplace_back("Level " + std::to_string(node.id() + 1));
-        _lines.emplace_back("Difficulty: Easy");
-        _lines.emplace_back("Reward: 200 gold");
     }
 };

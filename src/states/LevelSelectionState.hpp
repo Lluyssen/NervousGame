@@ -113,7 +113,7 @@ public:
 
     void onExit(StateManager &) override
     {
-        _systems.unload();
+        _systems.shutdown();
         _map.unload();
     }
 };

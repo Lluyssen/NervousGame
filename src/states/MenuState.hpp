@@ -1,8 +1,8 @@
 #pragma once
 
 #include "raylib.h"
-#include <ui/Starfield.hpp>
 #include <states/LevelSelectionState.hpp>
+#include <states/menu/StarfieldSystem.hpp>
 #include <states/menu/MenuBackgroundSystem.hpp>
 #include <states/menu/MenuButtonsSystem.hpp>
 #include <states/menu/MenuNPCSystem.hpp>
@@ -37,9 +37,6 @@ private:
     std::unique_ptr<StarfieldSystem> _nearStars;
 
     Texture2D *_loadingTexture = nullptr;
-    int _bgFramesLoaded = 0;
-
-    static constexpr int BG_TOTAL_FRAMES = 41;
 
     enum class ButtonID
     {
@@ -56,7 +53,6 @@ public:
         _systems.clear();
 
         _loadingTexture = &ctx.loadTexture("../assets/ui/loading.png");
-        _bgFramesLoaded = 0;
 
         int w = GetScreenWidth();
         int h = GetScreenHeight();
@@ -91,8 +87,17 @@ public:
 
         _systems.init(ctx);
 
-        _phase = Phase::Loading;
         _timer = 0.f;
+
+        if (_background.isReady())
+        {
+            _phase = Phase::UIReveal;
+            _buttons.startEnter();
+        }
+        else
+        {
+            _phase = Phase::Loading;
+        }
     }
 
     void update(StateManager &sm, float dt) override
@@ -100,25 +105,22 @@ public:
         auto &ctx = sm.getContext();
         dt = std::min(dt, 0.05f);
 
-        if (_bgFramesLoaded < BG_TOTAL_FRAMES)
-        {
-            for (int i = 0; i < 2 && _bgFramesLoaded < BG_TOTAL_FRAMES; ++i)
-                _background.loadFrame(ctx, "../assets/ui/bg/frame", _bgFramesLoaded++);
+        _systems.update(ctx, dt);
 
-            if (_bgFramesLoaded == BG_TOTAL_FRAMES)
-                _background.finalize();
+        if (!_background.isReady())
             return;
-        }
 
         ctx.updateMusic();
-        _systems.update(ctx, dt);
 
         switch (_phase)
         {
         case Phase::Loading:
             _timer += dt;
             if (_timer > 0.2f)
+            {
                 _phase = Phase::UIReveal;
+                _buttons.startEnter();
+            }
             break;
 
         case Phase::UIReveal:
@@ -143,7 +145,7 @@ public:
         int w = GetScreenWidth();
         int h = GetScreenHeight();
 
-        if (_bgFramesLoaded < BG_TOTAL_FRAMES && _loadingTexture)
+        if (_phase == Phase::Loading && _loadingTexture)
         {
             ClearBackground(BLACK);
 
@@ -151,7 +153,7 @@ public:
             Rectangle dst{0.f, 0.f, (float)w, (float)h};
             DrawTexturePro(*_loadingTexture, src, dst, {0, 0}, 0.f, WHITE);
 
-            float progress = std::clamp((float)_bgFramesLoaded / BG_TOTAL_FRAMES, 0.f, 1.f);
+            float progress = _background.progress();
 
             int barWidth = (int)(w * 0.4f);
             int barHeight = (int)(h * 0.03f);
@@ -162,8 +164,8 @@ public:
             DrawRectangle(x, y, (int)(barWidth * progress), barHeight, GOLD);
             DrawRectangleLines(x, y, barWidth, barHeight, WHITE);
 
-            const int percent = (int)(progress * 100);
-            const std::string text = TextFormat("Loading %d%%", percent);
+            int percent = (int)(progress * 100);
+            std::string text = TextFormat("Loading %d%%", percent);
             int textWidth = MeasureText(text.c_str(), 20);
 
             DrawText(text.c_str(), x + barWidth / 2 - textWidth / 2, y + barHeight + 10, 20, WHITE);
@@ -171,6 +173,7 @@ public:
             _background.draw(ctx);
             return;
         }
+
         _systems.draw(ctx);
     }
 
@@ -193,6 +196,6 @@ public:
 
     void onExit(StateManager &) override
     {
-        _systems.unload();
+        _systems.shutdown();
     }
 };

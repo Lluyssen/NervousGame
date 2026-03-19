@@ -1,21 +1,32 @@
 #pragma once
+
 #include "GameContext.hpp"
-#include <vector>
-#include <algorithm>
-
-#pragma once
 
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
+#include <typeindex>
+#include <cassert>
 
 namespace engine
 {
+
+    struct System
+    {
+        void init(GameContext &) {}
+        void update(GameContext &, float) {}
+        void draw(GameContext &) {}
+        void onResize(GameContext &, int, int) {}
+        void unload(void) {}
+    };
+
     class SystemManager
     {
     private:
         struct Entry
         {
             void *instance;
+            int priority;
 
             void (*init)(void *, GameContext &);
             void (*update)(void *, GameContext &, float);
@@ -25,6 +36,31 @@ namespace engine
         };
 
         std::vector<Entry> _systems;
+        std::unordered_map<std::type_index, void *> _lookup;
+
+        template <typename T>
+        static Entry makeEntry(T &sys, int priority)
+        {
+            Entry e;
+            e.instance = &sys;
+            e.priority = priority;
+            e.init = [](void *p, GameContext &ctx) { static_cast<T *>(p)->init(ctx); };
+            e.update = [](void *p, GameContext &ctx, float dt) { static_cast<T *>(p)->update(ctx, dt); };
+            e.draw = [](void *p, GameContext &ctx) { static_cast<T *>(p)->draw(ctx); };
+            e.resize = [](void *p, GameContext &ctx, int w, int h) { static_cast<T *>(p)->onResize(ctx, w, h); };
+            e.unload = [](void *p) { static_cast<T *>(p)->unload(); };
+            return e;
+        }
+
+        template <typename T>
+        T *sys_ptr(void)
+        {
+            auto it = _lookup.find(typeid(T));
+            if (it == _lookup.end())
+                return nullptr;
+
+            return static_cast<T *>(it->second);
+        }
 
     public:
         SystemManager(void)
@@ -33,53 +69,32 @@ namespace engine
         }
 
         template <typename T>
-        void add(T &sys)
+        void add(T &sys, int priority = 0)
         {
-            for (auto &e : _systems)
-                if (e.instance == &sys)
-                    return;
+            static_assert(std::is_base_of<System, T>::value, "System must inherit from engine::System");
 
-            Entry e;
-            e.instance = &sys;
+            if (_lookup.find(typeid(T)) != _lookup.end())
+                return;
 
-            e.init = [](void *p, GameContext &ctx)
-            {
-                static_cast<T *>(p)->init(ctx);
-            };
+            _lookup[typeid(T)] = &sys;
 
-            e.update = [](void *p, GameContext &ctx, float dt)
-            {
-                static_cast<T *>(p)->update(ctx, dt);
-            };
+            _systems.push_back(makeEntry(sys, priority));
+            
+            std::sort(_systems.begin(), _systems.end(), [](const Entry &a, const Entry &b) { return a.priority < b.priority; });
 
-            e.draw = [](void *p, GameContext &ctx)
-            {
-                static_cast<T *>(p)->draw(ctx);
-            };
+            assert(sys_ptr<T>() != nullptr);
+        }
 
-            e.resize = [](void *p, GameContext &ctx, int w, int h)
-            {
-                static_cast<T *>(p)->onResize(ctx, w, h);
-            };
-
-            e.unload = [](void *p)
-            {
-                static_cast<T *>(p)->unload();
-            };
-
-            _systems.push_back(e);
+        template <typename T>
+        T *get(void)
+        {
+            return sys_ptr<T>();
         }
 
         void init(GameContext &ctx)
         {
             for (auto &e : _systems)
                 e.init(e.instance, ctx);
-        }
-
-        void resize(GameContext &ctx, int w, int h)
-        {
-            for (auto &e : _systems)
-                e.resize(e.instance, ctx, w, h);
         }
 
         void update(GameContext &ctx, float dt)
@@ -94,15 +109,22 @@ namespace engine
                 e.draw(e.instance, ctx);
         }
 
-        void unload(void)
+        void resize(GameContext &ctx, int w, int h)
+        {
+            for (auto &e : _systems)
+                e.resize(e.instance, ctx, w, h);
+        }
+
+        void shutdown(void)
         {
             for (auto &e : _systems)
                 e.unload(e.instance);
         }
 
-        void clear()
+        void clear(void)
         {
             _systems.clear();
+            _lookup.clear();
         }
     };
 }

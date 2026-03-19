@@ -5,7 +5,7 @@
 #include <core/SystemManager.hpp>
 
 // Gère l'affichage d'un PNJ avec texte après un certain temps d'inactivité.
-class MenuNPCSystem
+class MenuNPCSystem : public engine::System
 {
 private:
     Texture2D _npc;

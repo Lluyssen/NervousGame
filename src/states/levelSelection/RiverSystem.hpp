@@ -7,7 +7,7 @@
 #include <core/SystemManager.hpp>
 #include "raylib.h"
 
-class RiverSystem
+class RiverSystem : public engine::System
 {
 private:
     struct RiverParticle
@@ -38,6 +38,67 @@ private:
 
     static constexpr float RIVER_WIDTH = 20.f;
     static constexpr size_t MAX_PARTICLES = 256;
+
+    void spawn(void)
+    {
+        if (_particles.size() >= MAX_PARTICLES)
+            return;
+
+        RiverParticle p;
+
+        p.segment = 0;
+        p.t = GetRandomValue(0, 1000) / 1000.f;
+        p.speed = GetRandomValue(20, 40) / 100.f;
+        p.offset = GetRandomValue(-100, 100) / 100.f * RIVER_WIDTH;
+        p.life = 0.f;
+        p.maxLife = GetRandomValue(3, 6);
+
+        _particles.push_back(p);
+    }
+
+    void remove(size_t i)
+    {
+        _particles[i] = _particles.back();
+        _particles.pop_back();
+    }
+
+    void computeSegments(int w, int h)
+    {
+        for (size_t i = 0; i < _path.size(); ++i)
+            _screenPath[i] = utils::normalizedToScreen(_path[i], w, h);
+
+        for (size_t i = 0; i < _segments.size(); ++i)
+        {
+            Vector2 a = _screenPath[i];
+            Vector2 b = _screenPath[i + 1];
+
+            Vector2 dir{b.x - a.x, b.y - a.y};
+
+            float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
+
+            if (len > 0.0001f)
+            {
+                dir.x /= len;
+                dir.y /= len;
+            }
+
+            Vector2 normal{-dir.y, dir.x};
+
+            _segments[i] = {a, b, normal, len};
+        }
+    }
+
+    Vector2 computePosition(const RiverParticle &p) const
+    {
+        const RiverSegment &s = _segments[p.segment];
+
+        Vector2 pos{s.a.x + (s.b.x - s.a.x) * p.t, s.a.y + (s.b.y - s.a.y) * p.t};
+
+        pos.x += s.normal.x * p.offset;
+        pos.y += s.normal.y * p.offset;
+
+        return pos;
+    }
 
 public:
     void setup(const std::array<Vector2, 6> &path)
@@ -117,68 +178,4 @@ public:
 
     int updateOrder(void) const { return 0; }
     int renderOrder(void) const { return 5; }
-
-private:
-    void spawn(void)
-    {
-        if (_particles.size() >= MAX_PARTICLES)
-            return;
-
-        RiverParticle p;
-
-        p.segment = 0;
-        p.t = GetRandomValue(0, 1000) / 1000.f;
-        p.speed = GetRandomValue(20, 40) / 100.f;
-        p.offset = GetRandomValue(-100, 100) / 100.f * RIVER_WIDTH;
-        p.life = 0.f;
-        p.maxLife = GetRandomValue(3, 6);
-
-        _particles.push_back(p);
-    }
-
-    void remove(size_t i)
-    {
-        _particles[i] = _particles.back();
-        _particles.pop_back();
-    }
-
-    void computeSegments(int w, int h)
-    {
-        for (size_t i = 0; i < _path.size(); ++i)
-            _screenPath[i] = utils::normalizedToScreen(_path[i], w, h);
-
-        for (size_t i = 0; i < _segments.size(); ++i)
-        {
-            Vector2 a = _screenPath[i];
-            Vector2 b = _screenPath[i + 1];
-
-            Vector2 dir{b.x - a.x, b.y - a.y};
-
-            float len = sqrtf(dir.x * dir.x + dir.y * dir.y);
-
-            if (len > 0.0001f)
-            {
-                dir.x /= len;
-                dir.y /= len;
-            }
-
-            Vector2 normal{-dir.y, dir.x};
-
-            _segments[i] = {a, b, normal, len};
-        }
-    }
-
-    Vector2 computePosition(const RiverParticle &p) const
-    {
-        const RiverSegment &s = _segments[p.segment];
-
-        Vector2 pos{
-            s.a.x + (s.b.x - s.a.x) * p.t,
-            s.a.y + (s.b.y - s.a.y) * p.t};
-
-        pos.x += s.normal.x * p.offset;
-        pos.y += s.normal.y * p.offset;
-
-        return pos;
-    }
 };

@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 project(NervousGame VERSION 1.0 LANGUAGES CXX)
 
+# =========================
+# Standard
+# =========================
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -19,10 +22,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(raylib)
 
-#add_compile_options(-Wall -Werror -pedantic)
-
 # =========================
-# ECS (via FetchContent)
+# ECS
 # =========================
 FetchContent_Declare(
     ecs
@@ -34,20 +35,23 @@ FetchContent_MakeAvailable(ecs)
 # =========================
 # JSON
 # =========================
-
 FetchContent_Declare(
     json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG v3.11.3
 )
-
 FetchContent_MakeAvailable(json)
 
 # =========================
-# Sources du projet
+# Sources (TOUT ton src/)
 # =========================
-file(GLOB_RECURSE SRC_FILES src/*.cpp)
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
+    ${CMAKE_SOURCE_DIR}/src/*.cpp
+)
 
+# =========================
+# Executable
+# =========================
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE

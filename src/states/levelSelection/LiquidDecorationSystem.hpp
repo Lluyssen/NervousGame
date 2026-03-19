@@ -5,8 +5,9 @@
 #include <ui/AnimatedSprite.hpp>
 #include <ui/animation/BulleAnimation.hpp>
 #include <core/GameContext.hpp>
+#include <core/SystemManager.hpp>
 
-class LiquidDecorationSystem
+class LiquidDecorationSystem : public engine::System
 {
 private:
     std::array<AnimatedSprite, 4> _liquid;

@@ -22,11 +22,11 @@ struct Velocity
     float vx = 0.f, vy = 0.f;
 };
 
-// Alias pour faciliter les systèmes
+// Alias ECS
 using StarComponents = TypeList<Position, Velocity, StarData>;
 
 // Système pour mettre à jour et dessiner les étoiles
-class StarfieldSystem : public SystemTypeList<StarComponents>
+class StarfieldSystem : public SystemTypeList<StarComponents>, public engine::System
 {
 private:
     int screenWidth;
@@ -34,17 +34,13 @@ private:
     Registry<StarComponents> *_registry = nullptr;
 
 public:
-    StarfieldSystem(int w, int h)
-        : screenWidth(w), screenHeight(h) {}
+    StarfieldSystem(int w, int h) : screenWidth(w), screenHeight(h) {}
 
     void setRegistry(Registry<StarComponents> &reg)
     {
         _registry = &reg;
     }
 
-    // -------------------------
-    // LOGIQUE ECS PURE
-    // -------------------------
     void update(double dt, Registry<StarComponents> &reg)
     {
         reg.template forEachEntityWith<StarComponents>(
@@ -78,24 +74,14 @@ public:
                 float twinkle = (sinf(s.phase * 3.0f) + 1.0f) * 0.5f;
                 float brightness = 160 + twinkle * 80;
 
-                Color c{
-                    (unsigned char)brightness,
-                    (unsigned char)brightness,
-                    (unsigned char)(brightness + 20),
-                    255};
+                Color c{(unsigned char)brightness, (unsigned char)brightness, (unsigned char)(brightness + 20), 255};
 
                 float size = s.size + twinkle * 0.4f;
 
-                DrawCircleV(
-                    {pos.x + nx * 30, pos.y + ny * 30},
-                    size,
-                    c);
+                DrawCircleV({pos.x + nx * 30, pos.y + ny * 30}, size, c);
             });
     }
 
-    // -------------------------
-    // INTERFACE SystemManager
-    // -------------------------
     void init(GameContext &) {}
 
     void update(GameContext &, float dt)
@@ -120,19 +106,19 @@ public:
         screenHeight = h;
     }
 
-void unload(void) {}
+    void unload(void) {}
 
-int updateOrder(void) const
+    int updateOrder(void) const
     {
         return 0;
     }
 
-int renderOrder(void) const
+    int renderOrder(void) const
     {
         return -100;
     }
 
-    const char *name() const
+    const char *name(void) const
     {
         return "StarfieldSystem";
     }
